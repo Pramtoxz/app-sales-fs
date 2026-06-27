@@ -1,6 +1,6 @@
 {
-  "_index-DD7L12FQ.js": {
-    "file": "assets/index-DD7L12FQ.js",
+  "_index-CLgRXlpC.js": {
+    "file": "assets/index-CLgRXlpC.js",
     "name": "index",
     "imports": [
       "resources/js/app.tsx"
@@ -10,7 +10,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-2yfOa5cu.css",
+    "file": "assets/app-IyanOBTT.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -19,7 +19,7 @@
     ]
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-DBuzrdqt.js",
+    "file": "assets/app-C8rr4-_I.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -28,7 +28,7 @@
       "resources/js/pages/dashboard.tsx"
     ],
     "css": [
-      "assets/app-2yfOa5cu.css"
+      "assets/app-IyanOBTT.css"
     ]
   },
   "resources/js/assets/images/malogo-horizontal.png": {
@@ -40,29 +40,29 @@
     "src": "resources/js/assets/images/malogo.png"
   },
   "resources/js/pages/auth/login.tsx": {
-    "file": "assets/login-CIyN6Scm.js",
+    "file": "assets/login-CadVWCqD.js",
     "name": "login",
     "src": "resources/js/pages/auth/login.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_index-DD7L12FQ.js"
+      "_index-CLgRXlpC.js"
     ],
     "css": [
-      "assets/app-2yfOa5cu.css"
+      "assets/app-IyanOBTT.css"
     ]
   },
   "resources/js/pages/dashboard.tsx": {
-    "file": "assets/dashboard-RK7CzOtF.js",
+    "file": "assets/dashboard-khNVr0_q.js",
     "name": "dashboard",
     "src": "resources/js/pages/dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_index-DD7L12FQ.js"
+      "_index-CLgRXlpC.js"
     ],
     "css": [
-      "assets/app-2yfOa5cu.css"
+      "assets/app-IyanOBTT.css"
     ],
     "assets": [
       "assets/malogo-horizontal-Dayo_aMh.png"
