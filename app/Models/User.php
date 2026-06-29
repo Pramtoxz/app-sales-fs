@@ -40,7 +40,32 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'flg_md_d' => 'string',
         ];
+    }
+
+    public function getRoles(): array
+    {
+        $roles = [];
+        if ($this->isIt()) $roles[] = 'IT';
+        if ($this->isKacab()) $roles[] = 'KACAB';
+        if ($this->isMd()) $roles[] = 'MD';
+        return $roles;
+    }
+
+    public function isIt(): bool
+    {
+        return in_array($this->attributes['it'] ?? null, ['t', '1', 1, true], true);
+    }
+
+    public function isKacab(): bool
+    {
+        return in_array($this->attributes['is_kacab'] ?? null, ['t', '1', 1, true], true);
+    }
+
+    public function isMd(): bool
+    {
+        return $this->flg_md_d === 'MD' && !$this->isKacab();
     }
 
     public function flp()
@@ -74,29 +99,5 @@ class User extends Authenticatable
     public function currentAccessToken()
     {
         return $this->accessToken ?? null;
-    }
-
-    public function getRoles(): array
-    {
-        $roles = [];
-        if ($this->it === 't') $roles[] = 'IT';
-        if ($this->is_kacab === 't') $roles[] = 'KACAB';
-        if ($this->flg_md_d === 'MD') $roles[] = 'MD';
-        return $roles;
-    }
-
-    public function isIt(): bool
-    {
-        return $this->it === 't';
-    }
-
-    public function isKacab(): bool
-    {
-        return $this->is_kacab === 't';
-    }
-
-    public function isMd(): bool
-    {
-        return $this->flg_md_d === 'MD';
     }
 }

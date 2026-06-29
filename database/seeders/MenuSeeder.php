@@ -10,6 +10,9 @@ class MenuSeeder extends Seeder
 {
     public function run(): void
     {
+        MenuRole::query()->delete();
+        Menu::query()->delete();
+
         $ALL = ['IT', 'KACAB', 'MD'];
 
         $menus = [
@@ -131,6 +134,48 @@ class MenuSeeder extends Seeder
                 'urutan' => 5,
                 'status_aktif' => true,
                 'roles' => $ALL,
+            ],
+            [
+                'nama_menu' => 'Target',
+                'ikon' => 'Target',
+                'route' => null,
+                'url' => null,
+                'parent_id' => null,
+                'urutan' => 6,
+                'status_aktif' => true,
+                'roles' => $ALL,
+                'children' => [
+                    [
+                        'nama_menu' => 'Target Dealer',
+                        'ikon' => 'Store',
+                        'route' => 'target-dealer.index',
+                        'url' => '/target-dealer',
+                        'urutan' => 1,
+                        'status_aktif' => true,
+                        'roles' => $ALL,
+                    ],
+                ],
+            ],
+            [
+                'nama_menu' => 'Pengaturan',
+                'ikon' => 'Settings',
+                'route' => null,
+                'url' => null,
+                'parent_id' => null,
+                'urutan' => 7,
+                'status_aktif' => true,
+                'roles' => ['IT'],
+                'children' => [
+                    [
+                        'nama_menu' => 'Menu Management',
+                        'ikon' => 'ListTree',
+                        'route' => 'settings.menus.index',
+                        'url' => '/settings/menus',
+                        'urutan' => 1,
+                        'status_aktif' => true,
+                        'roles' => ['IT'],
+                    ],
+                ],
             ],
         ];
 

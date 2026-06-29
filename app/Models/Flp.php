@@ -11,7 +11,7 @@ class Flp extends Model
 
     protected $connection = 'pgsql_sales';
     protected $table = 'public.flp';
-    protected $primaryKey = 'id_flp';
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -20,12 +20,14 @@ class Flp extends Model
         'nama',
         'kode_dealer',
         'jabatan',
-        'target',
         'kode_jabatan',
-        'id_level',
+        'user_id',
         'team',
-        'bulan',
-        'tahun',
+        'last_login',
+        'is_active',
+        'foto',
+        'created_at',
+        'updated_at'
     ];
 
     protected $casts = [
