@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Exports\TargetDealerTemplateExport;
+use App\Imports\TargetDealerImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TargetController extends Controller
@@ -213,29 +214,30 @@ class TargetController extends Controller
         ]);
 
         try {
-            $path = $request->file('file')->getRealPath();
-            $rows = Excel::load($path)->get();
+            $import = new TargetDealerImport();
+            Excel::import($import, $request->file('file'));
+            $rows = $import->rows;
             $inserted = 0;
             $errors = [];
 
             foreach ($rows as $row) {
-                if (empty($row->kode_dealer)) continue;
+                if (empty($row['kode_dealer'])) continue;
 
                 try {
-                    $bt = Carbon::createFromFormat('Y-m', trim($row->bulan_tahun))->format('m/01/Y');
+                    $bt = Carbon::createFromFormat('Y-m', trim($row['bulan_tahun']))->format('m/01/Y');
                 } catch (\Exception $e) {
-                    $errors[] = "Dealer {$row->kode_dealer}: format bulan_tahun tidak valid ({$row->bulan_tahun})";
+                    $errors[] = "Dealer {$row['kode_dealer']}: format bulan_tahun tidak valid ({$row['bulan_tahun']})";
                     continue;
                 }
 
                 MTargetDealer::updateOrCreate(
                     [
-                        'kode_dealer' => trim($row->kode_dealer),
-                        'series' => trim($row->series),
+                        'kode_dealer' => trim($row['kode_dealer']),
+                        'series' => trim($row['series']),
                         'bulan_tahun' => $bt,
                     ],
                     [
-                        'target' => $row->target ?? 0,
+                        'target' => $row['target'] ?? 0,
                     ]
                 );
 
