@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Exports\TargetDealerTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TargetController extends Controller
@@ -318,13 +319,6 @@ class TargetController extends Controller
             abort(403);
         }
 
-        ob_clean();
-        return Excel::create('template_target_dealer', function ($excel) {
-            $excel->sheet('Template', function ($sheet) {
-                $sheet->appendRow(['kode_dealer', 'series', 'bulan_tahun', 'target']);
-                $sheet->appendRow(['06732', 'VARIO 125', '2026-05', 50]);
-                $sheet->appendRow(['06732', 'BEAT', '2026-05', 30]);
-            });
-        })->download('xlsx');
+        return Excel::download(new TargetDealerTemplateExport(), 'template_target_dealer.xlsx');
     }
 }
