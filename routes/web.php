@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\TargetController;
@@ -42,5 +43,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('settings/menus', [MenuController::class, 'store'])->name('settings.menus.store');
         Route::put('settings/menus/{id}', [MenuController::class, 'update'])->name('settings.menus.update');
         Route::delete('settings/menus/{id}', [MenuController::class, 'destroy'])->name('settings.menus.destroy');
+
+        Route::get('banner', [BannerController::class, 'index'])->name('banner.index');
+        Route::post('banner', [BannerController::class, 'store'])->name('banner.store');
+        Route::put('banner/{id}', [BannerController::class, 'update'])->name('banner.update');
+        Route::delete('banner/{id}', [BannerController::class, 'destroy'])->name('banner.destroy');
     });
 });
