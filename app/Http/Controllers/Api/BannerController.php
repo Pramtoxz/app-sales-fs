@@ -28,7 +28,7 @@ class BannerController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($banner) {
-                $banner->image_url = Storage::disk('public')->url($banner->image_path);
+                $banner->image_url = url('storage/' . $banner->image_path);
                 return $banner;
             });
 
@@ -62,7 +62,7 @@ class BannerController extends Controller
             ], 404);
         }
 
-        $banner->image_url = Storage::disk('public')->url($banner->image_path);
+        $banner->image_url = url('storage/' . $banner->image_path);
 
         return response()->json([
             'success' => true,
@@ -103,7 +103,7 @@ class BannerController extends Controller
             ->where('id', $id)
             ->first();
 
-        $banner->image_url = Storage::disk('public')->url($banner->image_path);
+        $banner->image_url = url('storage/' . $banner->image_path);
 
         NotificationController::sendToAllUsers(
             'Promo Baru!',
@@ -174,7 +174,7 @@ class BannerController extends Controller
             ->where('id', $request->id)
             ->first();
 
-        $updated->image_url = Storage::disk('public')->url($updated->image_path);
+        $updated->image_url = url('storage/' . $updated->image_path);
 
         return response()->json([
             'success' => true,

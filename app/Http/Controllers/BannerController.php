@@ -22,7 +22,7 @@ class BannerController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($banner) {
-                $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
+                $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
                 return $banner;
             });
 
@@ -66,7 +66,7 @@ class BannerController extends Controller
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
-            $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
+            $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
 
             return response()->json(['success' => true, 'banner' => $banner]);
         } catch (\Exception $e) {
@@ -121,7 +121,7 @@ class BannerController extends Controller
             }
 
             $banner->update($data);
-            $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
+            $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
 
             return response()->json(['success' => true, 'banner' => $banner]);
         } catch (\Exception $e) {
