@@ -22,7 +22,7 @@ class BannerController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($banner) {
-                $banner->image_url = $banner->image_path ? url($banner->image_path) : null;
+                $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
                 return $banner;
             });
 
@@ -51,15 +51,9 @@ class BannerController extends Controller
         try {
             $imagePath = null;
             if ($request->hasFile('image')) {
-                $publicPath = public_path('photos/banners');
-                if (!file_exists($publicPath)) {
-                    mkdir($publicPath, 0755, true);
-                }
-
                 $file = $request->file('image');
                 $filename = 'banner_' . time() . '_' . mt_rand(1000, 9999) . '.' . $file->getClientOriginalExtension();
-                $file->move($publicPath, $filename);
-                $imagePath = 'photos/banners/' . $filename;
+                $imagePath = $file->storeAs('photos/banners', $filename, 'public');
             }
 
             $banner = Banner::create([
@@ -72,7 +66,7 @@ class BannerController extends Controller
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
-            $banner->image_url = $banner->image_path ? url($banner->image_path) : null;
+            $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
 
             return response()->json(['success' => true, 'banner' => $banner]);
         } catch (\Exception $e) {
@@ -117,23 +111,17 @@ class BannerController extends Controller
 
             if ($request->hasFile('image')) {
                 // Delete old image
-                if ($banner->image_path && file_exists(public_path($banner->image_path))) {
-                    unlink(public_path($banner->image_path));
-                }
-
-                $publicPath = public_path('photos/banners');
-                if (!file_exists($publicPath)) {
-                    mkdir($publicPath, 0755, true);
+                if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
+                    Storage::disk('public')->delete($banner->image_path);
                 }
 
                 $file = $request->file('image');
                 $filename = 'banner_' . time() . '_' . mt_rand(1000, 9999) . '.' . $file->getClientOriginalExtension();
-                $file->move($publicPath, $filename);
-                $data['image_path'] = 'photos/banners/' . $filename;
+                $data['image_path'] = $file->storeAs('photos/banners', $filename, 'public');
             }
 
             $banner->update($data);
-            $banner->image_url = $banner->image_path ? url($banner->image_path) : null;
+            $banner->image_url = $banner->image_path ? Storage::disk('public')->url($banner->image_path) : null;
 
             return response()->json(['success' => true, 'banner' => $banner]);
         } catch (\Exception $e) {
@@ -158,8 +146,8 @@ class BannerController extends Controller
 
         try {
             // Delete image file
-            if ($banner->image_path && file_exists(public_path($banner->image_path))) {
-                unlink(public_path($banner->image_path));
+            if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
+                Storage::disk('public')->delete($banner->image_path);
             }
 
             $banner->delete();

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BannerController extends Controller
 {
@@ -27,7 +28,7 @@ class BannerController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($banner) {
-                $banner->image_url = url($banner->image_path);
+                $banner->image_url = Storage::disk('public')->url($banner->image_path);
                 return $banner;
             });
 
@@ -61,7 +62,7 @@ class BannerController extends Controller
             ], 404);
         }
 
-        $banner->image_url = url($banner->image_path);
+        $banner->image_url = Storage::disk('public')->url($banner->image_path);
 
         return response()->json([
             'success' => true,
@@ -81,15 +82,9 @@ class BannerController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $publicPath = public_path('photos/banners');
-        if (!file_exists($publicPath)) {
-            mkdir($publicPath, 0755, true);
-        }
-
         $file = $request->file('image');
         $filename = 'banner_' . time() . '_' . mt_rand(1000, 9999) . '.' . $file->getClientOriginalExtension();
-        $file->move($publicPath, $filename);
-        $imagePath = 'photos/banners/' . $filename;
+        $imagePath = $file->storeAs('photos/banners', $filename, 'public');
 
         $id = DB::connection('pgsql_sales')->table('public.banners')->insertGetId([
             'title' => $request->title,
@@ -108,7 +103,7 @@ class BannerController extends Controller
             ->where('id', $id)
             ->first();
 
-        $banner->image_url = url($banner->image_path);
+        $banner->image_url = Storage::disk('public')->url($banner->image_path);
 
         NotificationController::sendToAllUsers(
             'Promo Baru!',
@@ -158,19 +153,13 @@ class BannerController extends Controller
         if ($request->has('is_active')) $data['is_active'] = $request->is_active;
 
         if ($request->hasFile('image')) {
-            $publicPath = public_path('photos/banners');
-            if (!file_exists($publicPath)) {
-                mkdir($publicPath, 0755, true);
-            }
-
-            if ($banner->image_path && file_exists(public_path($banner->image_path))) {
-                unlink(public_path($banner->image_path));
+            if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
+                Storage::disk('public')->delete($banner->image_path);
             }
 
             $file = $request->file('image');
             $filename = 'banner_' . time() . '_' . mt_rand(1000, 9999) . '.' . $file->getClientOriginalExtension();
-            $file->move($publicPath, $filename);
-            $data['image_path'] = 'photos/banners/' . $filename;
+            $data['image_path'] = $file->storeAs('photos/banners', $filename, 'public');
         }
 
         $data['updated_at'] = now();
@@ -185,7 +174,7 @@ class BannerController extends Controller
             ->where('id', $request->id)
             ->first();
 
-        $updated->image_url = url($updated->image_path);
+        $updated->image_url = Storage::disk('public')->url($updated->image_path);
 
         return response()->json([
             'success' => true,
