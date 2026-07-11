@@ -5,11 +5,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Toaster } from '@/components/ui/sonner';
 import { store } from '@/routes/login';
-import { Form } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 import { LogIn } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function Login() {
+    const { flash } = usePage().props as unknown as { flash?: { error?: string; success?: string } };
+
+    useEffect(() => {
+        if (flash?.error) toast.error(flash.error);
+        if (flash?.success) toast.success(flash.success);
+    }, [flash]);
+
     return (
         <>
             <div className="flex min-h-screen">
@@ -142,6 +152,7 @@ export default function Login() {
                     </div>
                 </div>
             </div>
+            <Toaster />
         </>
     );
 }

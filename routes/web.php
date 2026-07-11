@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\IndentWebController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\NotificationWebController;
+use App\Http\Controllers\StockWebController;
 use App\Http\Controllers\TargetController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -53,5 +55,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('notifikasi', [NotificationWebController::class, 'index'])->name('notifikasi.index');
         Route::get('notifikasi/sales', [NotificationWebController::class, 'getSales'])->name('notifikasi.sales');
         Route::post('notifikasi/send', [NotificationWebController::class, 'send'])->name('notifikasi.send');
+
+        Route::get('stock', [StockWebController::class, 'index'])->name('stock.index');
+        Route::get('stock/data', [StockWebController::class, 'getData'])->name('stock.data');
+
+        Route::get('indent', [IndentWebController::class, 'index'])->name('indent.index');
+        Route::get('indent/data', [IndentWebController::class, 'getData'])->name('indent.data');
     });
 });

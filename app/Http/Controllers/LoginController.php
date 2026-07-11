@@ -22,6 +22,15 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            if (empty($user->getRoles())) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->with('error', 'Anda tidak punya hak untuk akses ini');
+            }
+
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
