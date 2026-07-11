@@ -3,6 +3,7 @@
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\NotificationWebController;
 use App\Http\Controllers\TargetController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -48,5 +49,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('banner', [BannerController::class, 'store'])->name('banner.store');
         Route::put('banner/{id}', [BannerController::class, 'update'])->name('banner.update');
         Route::delete('banner/{id}', [BannerController::class, 'destroy'])->name('banner.destroy');
+
+        Route::get('notifikasi', [NotificationWebController::class, 'index'])->name('notifikasi.index');
+        Route::get('notifikasi/sales', [NotificationWebController::class, 'getSales'])->name('notifikasi.sales');
+        Route::post('notifikasi/send', [NotificationWebController::class, 'send'])->name('notifikasi.send');
     });
 });
