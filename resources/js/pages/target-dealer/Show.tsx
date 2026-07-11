@@ -118,6 +118,8 @@ export default function Show() {
     const [targetDialogOpen, setTargetDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const [formFlp, setFormFlp] = useState('');
     const [formSeries, setFormSeries] = useState('');
@@ -263,10 +265,15 @@ export default function Show() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Hapus target ini?')) return;
+        setDeleteConfirm(id);
+    };
 
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+
+        setDeleting(true);
         try {
-            const res = await fetch(`/target-dealer/flp/${id}/delete`, {
+            const res = await fetch(`/target-dealer/flp/${deleteConfirm}/delete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -276,12 +283,15 @@ export default function Show() {
             const json = await res.json();
             if (json.success) {
                 toast.success('Data berhasil dihapus');
+                setDeleteConfirm(null);
                 loadData();
             } else {
                 toast.error('Gagal menghapus data');
             }
         } catch {
             toast.error('Gagal menghapus data');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -756,6 +766,27 @@ export default function Show() {
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
                             Simpan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteConfirm !== null} onOpenChange={() => setDeleteConfirm(null)}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Hapus Target</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-sm text-muted-foreground">
+                        Yakin ingin menghapus target ini?
+                    </p>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={deleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+                            {deleting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                            Hapus
                         </Button>
                     </DialogFooter>
                 </DialogContent>

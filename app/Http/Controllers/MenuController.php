@@ -14,7 +14,7 @@ class MenuController extends Controller
     public function index(): Response
     {
         $menus = Menu::with(['children' => function ($q) {
-                $q->orderBy('urutan');
+                $q->orderBy('urutan')->with('menuRole');
             }, 'menuRole'])
             ->whereNull('parent_id')
             ->orderBy('urutan')

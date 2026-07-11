@@ -59,6 +59,7 @@ export default function BannerIndex({ banners }: Props) {
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<BannerItem | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     // Form state
     const [formTitle, setFormTitle] = useState('');
@@ -269,7 +270,8 @@ export default function BannerIndex({ banners }: Props) {
                                                     <img
                                                         src={banner.image_url}
                                                         alt={banner.title}
-                                                        className="h-12 w-20 rounded object-cover"
+                                                        className="h-12 w-20 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
+                                                        onClick={() => setPreviewImage(banner.image_url)}
                                                     />
                                                 ) : (
                                                     <div className="flex h-12 w-20 items-center justify-center rounded bg-muted text-xs">
@@ -555,6 +557,24 @@ export default function BannerIndex({ banners }: Props) {
                             Hapus
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Image Preview Dialog */}
+            <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+                <DialogContent className="max-w-4xl p-0 overflow-hidden">
+                    <DialogHeader className="px-6 pt-6 pb-2">
+                        <DialogTitle>Preview Gambar</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center px-6 pb-6">
+                        {previewImage && (
+                            <img
+                                src={previewImage}
+                                alt="Preview"
+                                className="max-h-[80vh] max-w-full rounded object-contain"
+                            />
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
         </AppLayout>

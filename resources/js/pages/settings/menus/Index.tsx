@@ -72,6 +72,8 @@ export default function MenuIndex({ menus, allRoles }: Props) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingMenu, setEditingMenu] = useState<MenuItem | null>(null);
     const [saving, setSaving] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<MenuItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const [formNama, setFormNama] = useState('');
     const [formIkon, setFormIkon] = useState('');
@@ -175,15 +177,15 @@ export default function MenuIndex({ menus, allRoles }: Props) {
     };
 
     const handleDelete = async (menu: MenuItem) => {
-        const childCount = menu.children?.length ?? 0;
-        const msg = childCount > 0
-            ? `Hapus "${menu.nama_menu}" dan ${childCount} sub menu?`
-            : `Hapus "${menu.nama_menu}"?`;
+        setDeleteConfirm(menu);
+    };
 
-        if (!confirm(msg)) return;
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
 
+        setDeleting(true);
         try {
-            const res = await fetch(`/settings/menus/${menu.id}`, {
+            const res = await fetch(`/settings/menus/${deleteConfirm.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -194,12 +196,15 @@ export default function MenuIndex({ menus, allRoles }: Props) {
 
             if (json.success) {
                 toast.success('Menu dihapus');
+                setDeleteConfirm(null);
                 router.reload({ only: ['menus'] });
             } else {
                 toast.error(json.message || 'Gagal menghapus');
             }
         } catch {
             toast.error('Gagal menghapus');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -434,6 +439,31 @@ export default function MenuIndex({ menus, allRoles }: Props) {
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
                             Simpan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Hapus Menu</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-sm text-muted-foreground">
+                        Yakin ingin menghapus menu{' '}
+                        <strong>"{deleteConfirm?.nama_menu}"</strong>
+                        {(deleteConfirm?.children?.length ?? 0) > 0
+                            ? ` dan ${deleteConfirm?.children?.length} sub menu?`
+                            : '?'}
+                    </p>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} disabled={deleting}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+                            {deleting && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                            Hapus
                         </Button>
                     </DialogFooter>
                 </DialogContent>
