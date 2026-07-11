@@ -1,9 +1,21 @@
+import BarChartWidget from '@/components/dashboard/widgets/BarChartWidget';
+import LeaderboardWidget from '@/components/dashboard/widgets/LeaderboardWidget';
+import LineChartWidget from '@/components/dashboard/widgets/LineChartWidget';
+import PieChartWidget from '@/components/dashboard/widgets/PieChartWidget';
+import ProgressWidget from '@/components/dashboard/widgets/ProgressWidget';
 import StatCard from '@/components/dashboard/widgets/StatCard';
+import TableWidget from '@/components/dashboard/widgets/TableWidget';
 import type { ComponentType } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const COMPONENT_MAP: Record<string, ComponentType<any>> = {
     StatCard,
+    BarChartWidget,
+    PieChartWidget,
+    LineChartWidget,
+    LeaderboardWidget,
+    ProgressWidget,
+    TableWidget,
 };
 
 interface WidgetRendererProps {
@@ -32,5 +44,5 @@ export default function WidgetRenderer({ component, data, config, loading }: Wid
         );
     }
 
-    return <Component data={data} config={config} />;
+    return <Component data={data} config={config ?? {}} />;
 }

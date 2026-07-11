@@ -22,6 +22,14 @@ interface StatCardProps {
 }
 
 export default function StatCard({ data, config }: StatCardProps) {
+    if (!data || Object.keys(data).length === 0) {
+        return (
+            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                Tidak ada data
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-4">
             {config.title && <h3 className="text-lg font-semibold">{config.title}</h3>}

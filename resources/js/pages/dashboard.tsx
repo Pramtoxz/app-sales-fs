@@ -1,13 +1,8 @@
-import 'react-grid-layout/css/styles.css';
-
 import AppLayout from '@/layouts/app-layout';
 import WidgetRenderer from '@/components/dashboard/WidgetRenderer';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface Widget {
     id: number;
@@ -24,7 +19,7 @@ interface Widget {
 }
 
 interface Props {
-    widgets: Widget[];
+    widgets?: Widget[];
     isKacab: boolean;
     isMd: boolean;
     isIt: boolean;
@@ -34,9 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
 ];
 
-const GRID_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
-
-export default function Dashboard({ widgets, isKacab }: Props) {
+export default function Dashboard({ widgets = [], isKacab }: Props) {
     const [widgetData, setWidgetData] = useState<Record<number, unknown>>({});
     const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
 
@@ -51,7 +44,7 @@ export default function Dashboard({ widgets, isKacab }: Props) {
                 if (!isKacab && widget.config?.kode_dealer) {
                     params.append('kode_dealer', String(widget.config.kode_dealer));
                 }
-                Object.entries(widget.config).forEach(([key, value]) => {
+                Object.entries(widget.config ?? {}).forEach(([key, value]) => {
                     if (key !== 'kode_dealer' && value !== undefined && value !== null) {
                         params.append(key, String(value));
                     }
@@ -62,10 +55,7 @@ export default function Dashboard({ widgets, isKacab }: Props) {
                     : widget.endpoint;
 
                 const res = await fetch(url, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
                 });
 
@@ -90,13 +80,13 @@ export default function Dashboard({ widgets, isKacab }: Props) {
         });
     }, [widgets, isKacab]);
 
-    const layout = widgets.map((w) => ({
-        i: String(w.id),
-        x: w.pos_x,
-        y: w.pos_y,
-        w: w.width,
-        h: w.height,
-    }));
+    const getSpanClass = (w: number) => {
+        if (w >= 12) return 'col-span-12';
+        if (w >= 8) return 'col-span-12 lg:col-span-8';
+        if (w >= 6) return 'col-span-12 lg:col-span-6';
+        if (w >= 4) return 'col-span-12 lg:col-span-4';
+        return 'col-span-12 lg:col-span-6';
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -106,24 +96,15 @@ export default function Dashboard({ widgets, isKacab }: Props) {
                 {widgets.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                         <p className="text-lg font-medium">Belum ada widget</p>
-                        <p className="text-sm">Hubungi admin untuk mengatur dashboard</p>
+                        <p className="text-sm">Buka Kelola Dashboard untuk mengatur widget</p>
                     </div>
                 ) : (
-                    <ResponsiveGridLayout
-                        className="layout"
-                        layouts={{ lg: layout, md: layout, sm: layout }}
-                        cols={GRID_COLS}
-                        rowHeight={50}
-                        containerPadding={[0, 0]}
-                        margin={[10, 10]}
-                        isDraggable={false}
-                        isResizable={false}
-                        compactType="vertical"
-                    >
+                    <div className="grid grid-cols-12 gap-4">
                         {widgets.map((widget) => (
                             <div
                                 key={String(widget.id)}
-                                className="rounded-lg border bg-card shadow-sm overflow-hidden"
+                                className={`${getSpanClass(widget.width)} rounded-lg border bg-card shadow-sm overflow-hidden`}
+                                style={{ minHeight: (widget.height ?? 4) * 50 }}
                             >
                                 <div className="border-b px-4 py-2">
                                     <h3 className="text-sm font-semibold">{widget.title}</h3>
@@ -132,13 +113,13 @@ export default function Dashboard({ widgets, isKacab }: Props) {
                                     <WidgetRenderer
                                         component={widget.component}
                                         data={widgetData[widget.id]}
-                                        config={widget.config}
+                                        config={widget.config ?? {}}
                                         loading={loadingIds.has(widget.id)}
                                     />
                                 </div>
                             </div>
                         ))}
-                    </ResponsiveGridLayout>
+                    </div>
                 )}
             </div>
         </AppLayout>

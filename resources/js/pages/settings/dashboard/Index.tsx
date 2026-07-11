@@ -1,5 +1,3 @@
-import 'react-grid-layout/css/styles.css';
-
 import AppLayout from '@/layouts/app-layout';
 import WidgetRenderer from '@/components/dashboard/WidgetRenderer';
 import { Badge } from '@/components/ui/badge';
@@ -26,10 +24,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Loader2, Plus, RotateCcw, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import { toast } from 'sonner';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface WidgetType {
     id: number;
@@ -72,14 +67,6 @@ interface Dealer {
     nama_dealer: string;
 }
 
-interface LayoutItem {
-    i: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
-
 interface Props {
     widgetTypes: WidgetType[];
     dataSources: DataSource[];
@@ -91,8 +78,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pengaturan', href: '#' },
     { title: 'Dashboard', href: '/settings/dashboard' },
 ];
-
-const GRID_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
 
 const csrfToken = () =>
     document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -140,7 +125,7 @@ export default function KelolaDashboard({ widgetTypes, dataSources, widgets: ini
                 if (!isKacab && widget.config?.kode_dealer) {
                     params.append('kode_dealer', String(widget.config.kode_dealer));
                 }
-                Object.entries(widget.config).forEach(([key, value]) => {
+                Object.entries(widget.config ?? {}).forEach(([key, value]) => {
                     if (key !== 'kode_dealer' && value !== undefined && value !== null) {
                         params.append(key, String(value));
                     }
@@ -175,70 +160,12 @@ export default function KelolaDashboard({ widgetTypes, dataSources, widgets: ini
         });
     }, [widgets, isKacab]);
 
-    const layout: LayoutItem[] = widgets.map((w) => ({
-        i: String(w.id),
-        x: w.pos_x,
-        y: w.pos_y,
-        w: w.width,
-        h: w.height,
-    }));
-
-    const handleLayoutChange = (newLayout: readonly LayoutItem[]) => {
-        const hasChanged = newLayout.some((item) => {
-            const widget = widgets.find((w) => String(w.id) === item.i);
-            if (!widget) return false;
-            return (
-                widget.pos_x !== item.x ||
-                widget.pos_y !== item.y ||
-                widget.width !== item.w ||
-                widget.height !== item.h
-            );
-        });
-
-        if (!hasChanged) return;
-
-        const updatedWidgets = widgets.map((w) => {
-            const layoutItem = newLayout.find((l) => l.i === String(w.id));
-            if (layoutItem) {
-                return {
-                    ...w,
-                    pos_x: layoutItem.x,
-                    pos_y: layoutItem.y,
-                    width: layoutItem.w,
-                    height: layoutItem.h,
-                };
-            }
-            return w;
-        });
-
-        setWidgets(updatedWidgets);
-
-        fetch('/settings/dashboard/layout', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                layouts: newLayout.map((item) => ({
-                    id: parseInt(item.i),
-                    pos_x: item.x,
-                    pos_y: item.y,
-                    width: item.w,
-                    height: item.h,
-                })),
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (!data.success) {
-                    toast.error(data.message || 'Gagal menyimpan layout');
-                }
-            })
-            .catch(() => {
-                toast.error('Gagal menyimpan layout');
-            });
+    const getSpanClass = (w: number) => {
+        if (w >= 12) return 'col-span-12';
+        if (w >= 8) return 'col-span-12 lg:col-span-8';
+        if (w >= 6) return 'col-span-12 lg:col-span-6';
+        if (w >= 4) return 'col-span-12 lg:col-span-4';
+        return 'col-span-12 lg:col-span-6';
     };
 
     const resetForm = () => {
@@ -406,22 +333,12 @@ export default function KelolaDashboard({ widgetTypes, dataSources, widgets: ini
                                 <p className="text-sm">Klik "Tambah Widget" untuk menambahkan widget baru</p>
                             </div>
                         ) : (
-                            <ResponsiveGridLayout
-                                className="layout"
-                                layouts={{ lg: layout, md: layout, sm: layout }}
-                                cols={GRID_COLS}
-                                rowHeight={50}
-                                containerPadding={[0, 0]}
-                                margin={[10, 10]}
-                                isDraggable={true}
-                                isResizable={true}
-                                compactType="vertical"
-                                onLayoutChange={(newLayout) => handleLayoutChange(newLayout)}
-                            >
+                            <div className="grid grid-cols-12 gap-4">
                                 {widgets.map((widget) => (
                                     <div
                                         key={String(widget.id)}
-                                        className="rounded-lg border bg-card shadow-sm overflow-hidden"
+                                        className={`${getSpanClass(widget.width)} rounded-lg border bg-card shadow-sm overflow-hidden`}
+                                        style={{ minHeight: (widget.height ?? 4) * 50 }}
                                     >
                                         <div className="flex items-center justify-between border-b px-4 py-2">
                                             <div className="flex items-center gap-2">
@@ -446,13 +363,13 @@ export default function KelolaDashboard({ widgetTypes, dataSources, widgets: ini
                                             <WidgetRenderer
                                                 component={widget.widget_type_component}
                                                 data={widgetData[widget.id]}
-                                                config={widget.config}
+                                                config={widget.config ?? {}}
                                                 loading={loadingIds.has(widget.id)}
                                             />
                                         </div>
-                                    </div>
-                                ))}
-                            </ResponsiveGridLayout>
+                                </div>
+                            ))}
+                            </div>
                         )}
                     </CardContent>
                 </Card>
