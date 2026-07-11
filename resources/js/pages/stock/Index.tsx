@@ -136,30 +136,34 @@ export default function Index() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="relative flex-1 max-w-xs">
-                                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                                <Input
-                                    placeholder="Cari tipe / warna..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') loadData();
-                                    }}
-                                    className="pl-9 pr-8"
-                                />
-                                {search && (
-                                    <button
-                                        onClick={() => setSearch('')}
-                                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                            <Button onClick={loadData} disabled={loading || !kodeDealer} size="sm">
-                                {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
-                                Tampilkan
-                            </Button>
+                            {!isKacab && (
+                                <>
+                                    <div className="relative flex-1 max-w-xs">
+                                        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                                        <Input
+                                            placeholder="Cari tipe / warna..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') loadData();
+                                            }}
+                                            className="pl-9 pr-8"
+                                        />
+                                        {search && (
+                                            <button
+                                                onClick={() => setSearch('')}
+                                                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <Button onClick={loadData} disabled={loading || !kodeDealer} size="sm">
+                                        {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                                        Tampilkan
+                                    </Button>
+                                </>
+                            )}
                         </div>
 
                         <div className="rounded-md border">

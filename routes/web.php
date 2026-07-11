@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\FlpWebController;
 use App\Http\Controllers\IndentWebController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\NotificationWebController;
+use App\Http\Controllers\PerformanceWebController;
 use App\Http\Controllers\StockWebController;
 use App\Http\Controllers\TargetController;
 use Illuminate\Support\Facades\Route;
@@ -61,5 +63,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('indent', [IndentWebController::class, 'index'])->name('indent.index');
         Route::get('indent/data', [IndentWebController::class, 'getData'])->name('indent.data');
+
+        Route::get('flp', [FlpWebController::class, 'index'])->name('flp.index');
+        Route::get('flp/data', [FlpWebController::class, 'getData'])->name('flp.data');
+
+        Route::get('performance', [PerformanceWebController::class, 'index'])->name('performance.index');
+        Route::get('performance/data', [PerformanceWebController::class, 'getData'])->name('performance.data');
     });
 });

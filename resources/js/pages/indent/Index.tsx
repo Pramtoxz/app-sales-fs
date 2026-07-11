@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { ClipboardList, Loader2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -97,6 +97,10 @@ export default function Index() {
         setData([]);
     };
 
+    useEffect(() => {
+        if (kodeDealer) loadData();
+    }, [kodeDealer]);
+
     const totalAll = data.reduce((sum, g) => sum + g.items.length, 0);
 
     return (
@@ -136,10 +140,12 @@ export default function Index() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={loadData} disabled={loading || !kodeDealer} size="sm">
-                                {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
-                                Tampilkan
-                            </Button>
+                            {!isKacab && (
+                                <Button onClick={loadData} disabled={loading || !kodeDealer} size="sm">
+                                    {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                                    Tampilkan
+                                </Button>
+                            )}
                         </div>
 
                         <div className="rounded-md border">
