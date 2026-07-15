@@ -104,7 +104,23 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
     const [formLimit, setFormLimit] = useState('');
     const [formShowLegend, setFormShowLegend] = useState(false);
     const [formShowLabel, setFormShowLabel] = useState(false);
-    const [formColors, setFormColors] = useState('');
+    const [formColors, setFormColors] = useState<string[]>([]);
+
+    const CHART_KEYS = ['bar_chart', 'pie_chart', 'line_chart'];
+    const LIMIT_KEYS = ['leaderboard', 'table', 'bar_chart', 'pie_chart', 'line_chart'];
+
+    const selectedWidgetType = widgetTypes.find((wt) => String(wt.id) === formWidgetTypeId);
+    const isChart = selectedWidgetType ? CHART_KEYS.includes(selectedWidgetType.key) : false;
+    const showLimit = selectedWidgetType ? LIMIT_KEYS.includes(selectedWidgetType.key) : false;
+
+    const PRESET_PALETTES = [
+        { label: 'Biru-Hijau', colors: ['#2563eb', '#16a34a'] },
+        { label: 'Pelangi', colors: ['#ef4444', '#f59e0b', '#16a34a', '#2563eb', '#8b5cf6'] },
+        { label: 'Hangat', colors: ['#ef4444', '#f97316', '#f59e0b'] },
+        { label: 'Dingin', colors: ['#06b6d4', '#2563eb', '#8b5cf6'] },
+        { label: 'Pastel', colors: ['#93c5fd', '#86efac', '#fde68a', '#fca5a5', '#c4b5fd'] },
+        { label: 'Monokrom', colors: ['#1e293b', '#475569', '#94a3b8'] },
+    ];
 
     useEffect(() => {
         if (!isKacab) {
@@ -184,7 +200,7 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
         setFormLimit('');
         setFormShowLegend(false);
         setFormShowLabel(false);
-        setFormColors('');
+        setFormColors([]);
     };
 
     const openAddDialog = () => {
@@ -211,10 +227,12 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
         const config: Record<string, unknown> = {};
         if (!isKacab && formKodeDealer) config.kode_dealer = formKodeDealer;
         if (formBulanTahun) config.bulan_tahun = formBulanTahun;
-        if (formLimit) config.limit = parseInt(formLimit);
-        config.show_legend = formShowLegend;
-        config.show_label = formShowLabel;
-        if (formColors.trim()) config.colors = formColors.split(',').map((c) => c.trim());
+        if (formLimit && showLimit) config.limit = parseInt(formLimit);
+        if (isChart) {
+            config.show_legend = formShowLegend;
+            config.show_label = formShowLabel;
+            if (formColors.length > 0) config.colors = formColors;
+        }
 
         try {
             const res = await fetch('/settings/dashboard', {
@@ -392,7 +410,7 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                             <Label>Jenis Widget <span className="text-destructive">*</span></Label>
                             <Select value={formWidgetTypeId} onValueChange={setFormWidgetTypeId}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih jenis widget" />
+                                    <SelectValue placeholder="Pilih tampilan widget" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {widgetTypes.map((wt) => (
@@ -402,13 +420,14 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-muted-foreground">Bentuk tampilan data (kartu, grafik, tabel, dll)</p>
                         </div>
 
                         <div className="space-y-1">
                             <Label>Sumber Data <span className="text-destructive">*</span></Label>
                             <Select value={formDataSourceId} onValueChange={setFormDataSourceId}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Pilih sumber data" />
+                                    <SelectValue placeholder="Pilih data yang ingin ditampilkan" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {dataSources.map((ds) => (
@@ -418,6 +437,7 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-muted-foreground">Jenis data apa yang ingin ditampilkan di widget</p>
                         </div>
 
                         <div className="space-y-1">
@@ -425,8 +445,9 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                             <Input
                                 value={formTitle}
                                 onChange={(e) => setFormTitle(e.target.value)}
-                                placeholder="Judul widget"
+                                placeholder="Contoh: Penjualan Juli 2026"
                             />
+                            <p className="text-xs text-muted-foreground">Nama yang tampil di atas widget</p>
                         </div>
 
                         {!isKacab && (
@@ -434,7 +455,7 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                                 <Label>Dealer</Label>
                                 <Select value={formKodeDealer} onValueChange={setFormKodeDealer}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih dealer (opsional)" />
+                                        <SelectValue placeholder="Semua dealer" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {dealers.map((d) => (
@@ -444,6 +465,7 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <p className="text-xs text-muted-foreground">Kosongkan jika ingin lihat data semua dealer</p>
                             </div>
                         )}
 
@@ -455,44 +477,74 @@ export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSourc
                                     value={formBulanTahun}
                                     onChange={(e) => setFormBulanTahun(e.target.value)}
                                 />
+                                <p className="text-xs text-muted-foreground">Default: bulan ini</p>
                             </div>
-                            <div className="space-y-1">
-                                <Label>Limit</Label>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    value={formLimit}
-                                    onChange={(e) => setFormLimit(e.target.value)}
-                                    placeholder="Jumlah data"
-                                />
-                            </div>
+                            {showLimit && (
+                                <div className="space-y-1">
+                                    <Label>Jumlah Data</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={100}
+                                        value={formLimit}
+                                        onChange={(e) => setFormLimit(e.target.value)}
+                                        placeholder="10"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Berapa baris data ditampilkan</p>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex gap-6">
-                            <label className="flex items-center gap-2 text-sm">
-                                <Checkbox
-                                    checked={formShowLegend}
-                                    onCheckedChange={(v) => setFormShowLegend(v === true)}
-                                />
-                                Tampilkan Legend
-                            </label>
-                            <label className="flex items-center gap-2 text-sm">
-                                <Checkbox
-                                    checked={formShowLabel}
-                                    onCheckedChange={(v) => setFormShowLabel(v === true)}
-                                />
-                                Tampilkan Label
-                            </label>
-                        </div>
+                        {isChart && (
+                            <>
+                                <div className="flex gap-6">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <Checkbox
+                                            checked={formShowLegend}
+                                            onCheckedChange={(v) => setFormShowLegend(v === true)}
+                                        />
+                                        Tampilkan Keterangan Warna
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <Checkbox
+                                            checked={formShowLabel}
+                                            onCheckedChange={(v) => setFormShowLabel(v === true)}
+                                        />
+                                        Tampilkan Angka di Grafik
+                                    </label>
+                                </div>
 
-                        <div className="space-y-1">
-                            <Label>Warna (hex, pisahkan koma)</Label>
-                            <Input
-                                value={formColors}
-                                onChange={(e) => setFormColors(e.target.value)}
-                                placeholder="#FF0000, #00FF00, #0000FF"
-                            />
-                        </div>
+                                <div className="space-y-2">
+                                    <Label>Warna Grafik</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {PRESET_PALETTES.map((palette) => (
+                                            <button
+                                                key={palette.label}
+                                                type="button"
+                                                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors ${
+                                                    JSON.stringify(formColors) === JSON.stringify(palette.colors)
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border hover:bg-accent'
+                                                }`}
+                                                onClick={() => setFormColors(palette.colors)}
+                                            >
+                                                <div className="flex gap-0.5">
+                                                    {palette.colors.map((c, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="h-4 w-4 rounded-full border border-black/10"
+                                                            style={{ backgroundColor: c }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span>{palette.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Pilih kombinasi warna untuk grafik</p>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={saving}>
