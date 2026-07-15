@@ -64,8 +64,8 @@ class TargetFlp extends Model
                 DB::raw('SUM(t.target) as total_target'),
             ])
             ->where('t.fk_dealer', $fk_dealer)
-            ->whereRaw("TO_DATE(t.bulan_tahun, 'MM/DD/YYYY') >= ?", [$start_date])
-            ->whereRaw("TO_DATE(t.bulan_tahun, 'MM/DD/YYYY') <= ?", [$end_date]);
+            ->whereRaw("CASE WHEN position('/' in t.bulan_tahun) > 0 THEN TO_DATE(t.bulan_tahun, 'MM/DD/YYYY') ELSE t.bulan_tahun::date END >= ?", [$start_date])
+            ->whereRaw("CASE WHEN position('/' in t.bulan_tahun) > 0 THEN TO_DATE(t.bulan_tahun, 'MM/DD/YYYY') ELSE t.bulan_tahun::date END <= ?", [$end_date]);
 
         if ($id_flp) {
             $targetQuery->where('t.id_flp', $id_flp);

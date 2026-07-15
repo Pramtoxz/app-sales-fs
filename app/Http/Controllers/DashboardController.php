@@ -61,14 +61,14 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::parse($bulan . '-01')->startOfMonth()->format('Y-m-d');
         $endOfMonth = Carbon::parse($bulan . '-01')->endOfMonth()->format('Y-m-d');
 
-        $bulanFmt = sprintf('%02d/01/%s', substr($bulan, 5, 2), substr($bulan, 0, 4));
+        $bulanYM = substr($bulan, 0, 7);
 
         $flpQuery = Flp::where('is_active', true);
         if ($kodeDealer) $flpQuery->where('kode_dealer', $kodeDealer);
         $totalFlp = $flpQuery->count();
 
         $targetQuery = DB::connection('pgsql_sales')->table('H1_DOS.tbl_target_flp')
-            ->whereRaw("TO_DATE(bulan_tahun, 'MM/DD/YYYY') = TO_DATE(?, 'MM/DD/YYYY')", [$bulanFmt]);
+            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM]);
         if ($kodeDealer) $targetQuery->where('fk_dealer', $kodeDealer);
         $totalTarget = (int) $targetQuery->sum('target');
 
@@ -110,7 +110,7 @@ class DashboardController extends Controller
 
         $bulan = substr($bulanTahun, 5, 2);
         $tahun = substr($bulanTahun, 0, 4);
-        $bulanTahunFmt = sprintf('%s/01/%s', $bulan, $tahun);
+        $bulanYM = substr($bulanTahun, 0, 7);
         $startDate = sprintf('%s-%s-01', $tahun, $bulan);
         $endDate = Carbon::parse($startDate)->endOfMonth()->format('Y-m-d');
 
@@ -119,7 +119,7 @@ class DashboardController extends Controller
                 SELECT ttf.id_flp, COALESCE(flp.nama, 'FLP ' || ttf.id_flp) as nama, flp.foto, SUM(ttf.target) as total_target
                 FROM \"H1_DOS\".\"tbl_target_flp\" ttf
                 LEFT JOIN \"public\".\"flp\" ON flp.id_flp = ttf.id_flp
-                WHERE ttf.bulan_tahun = ?
+                WHERE CASE WHEN position('/' in ttf.bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(ttf.bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(ttf.bulan_tahun::date, 'YYYY-MM') END = ?
                 " . ($kodeDealer ? 'AND ttf.fk_dealer = ?' : '') . "
                 GROUP BY ttf.id_flp, flp.nama, flp.foto
             ),
@@ -143,7 +143,7 @@ class DashboardController extends Controller
             LIMIT ?
         ";
 
-        $params = [$bulanTahunFmt];
+        $params = [$bulanYM];
         if ($kodeDealer) $params[] = $kodeDealer;
         $params[] = $startDate;
         $params[] = $endDate;
@@ -170,7 +170,7 @@ class DashboardController extends Controller
         $kodeDealer = $this->resolveDealer($user, $request);
         $bulanTahun = $request->input('bulan_tahun', Carbon::now()->format('Y-m'));
 
-        $bulanFmt = sprintf('%02d/01/%s', substr($bulanTahun, 5, 2), substr($bulanTahun, 0, 4));
+        $bulanYM = substr($bulanTahun, 0, 7);
         $startDate = Carbon::parse($bulanTahun . '-01')->startOfMonth()->format('Y-m-d');
         $endDate = Carbon::parse($bulanTahun . '-01')->endOfMonth()->format('Y-m-d');
 
@@ -178,7 +178,7 @@ class DashboardController extends Controller
         if ($kodeDealer) $dealerQuery->where('kd_dealer_md', $kodeDealer);
         $dealers = $dealerQuery->get();
 
-        $targets = MTargetDealer::whereRaw("TO_DATE(bulan_tahun, 'MM/DD/YYYY') = TO_DATE(?, 'MM/DD/YYYY')", [$bulanFmt])
+        $targets = MTargetDealer::whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM])
             ->get()
             ->groupBy('kode_dealer');
 

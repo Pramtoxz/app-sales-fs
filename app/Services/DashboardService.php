@@ -41,13 +41,13 @@ class DashboardService
         $today        = Carbon::today()->format('Y-m-d');
         $startOfMonth = Carbon::today()->startOfMonth()->format('Y-m-d');
 
+        $bulanYM = Carbon::today()->format('Y-m');
+
         $target = DB::connection('pgsql_sales')
             ->table('H1_DOS.tbl_target_flp')
             ->where('id_flp', $idFlp)
             ->where('fk_dealer', $dealerCode)
-            ->whereRaw("TO_DATE(bulan_tahun, 'MM/DD/YYYY') = TO_DATE(?, 'MM/DD/YYYY')", [
-                sprintf('%02d/01/%d', Carbon::today()->month, Carbon::today()->year)
-            ])
+            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM])
             ->sum('target');
 
         $baseQuery = DB::connection('pgsql_sales')

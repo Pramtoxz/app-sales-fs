@@ -62,9 +62,7 @@ class ActualSalesController extends Controller
         $targetData = DB::connection('pgsql_sales')
             ->table('H1_DOS.tbl_target_flp')
             ->where('id_flp', $flp->id_flp)
-            ->whereRaw("TO_DATE(bulan_tahun, 'MM/DD/YYYY') = TO_DATE(?, 'MM/DD/YYYY')", [
-                sprintf('%02d/01/%d', $bulan, $tahun)
-            ])
+            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [sprintf('%04d-%02d', $tahun, $bulan)])
             ->selectRaw('SUM(target) as total_target')
             ->first();
 
