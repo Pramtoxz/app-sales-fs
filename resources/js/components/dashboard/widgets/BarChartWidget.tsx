@@ -39,7 +39,7 @@ interface BarChartWidgetProps {
 }
 
 export default function BarChartWidget({ data, config }: BarChartWidgetProps) {
-    if (!data.length) return null;
+    if (!data || !data.length) return null;
 
     const keys = Object.keys(data[0]).filter((k) => !isSkippedKey(k));
     const xKey = keys.find((k) => typeof data[0][k] === 'string') ?? keys[0];

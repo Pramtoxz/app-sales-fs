@@ -36,6 +36,14 @@ function progressColor(pct: number) {
 }
 
 export default function ProgressWidget({ data, config }: ProgressWidgetProps) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                Tidak ada data
+            </div>
+        );
+    }
+
     const labelKey = getLabelKey(data);
     const valueKey = getValueKey(data);
 

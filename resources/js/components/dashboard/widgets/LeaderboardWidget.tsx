@@ -39,6 +39,14 @@ function percentColor(pct: number) {
 }
 
 export default function LeaderboardWidget({ data, config }: LeaderboardWidgetProps) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                Tidak ada data
+            </div>
+        );
+    }
+
     return (
         <Card>
             {config.title && (

@@ -25,6 +25,13 @@ interface WidgetRendererProps {
     loading?: boolean;
 }
 
+function unwrapData(raw: unknown): unknown {
+    if (raw && typeof raw === 'object' && 'data' in raw && Object.keys(raw as Record<string, unknown>).length <= 3) {
+        return (raw as Record<string, unknown>).data;
+    }
+    return raw;
+}
+
 export default function WidgetRenderer({ component, data, config, loading }: WidgetRendererProps) {
     if (loading) {
         return (
@@ -44,5 +51,14 @@ export default function WidgetRenderer({ component, data, config, loading }: Wid
         );
     }
 
-    return <Component data={data} config={config ?? {}} />;
+    if (data === null || data === undefined) {
+        return (
+            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                Tidak ada data
+            </div>
+        );
+    }
+
+    const unwrapped = unwrapData(data);
+    return <Component data={unwrapped} config={config ?? {}} />;
 }

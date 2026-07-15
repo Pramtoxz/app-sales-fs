@@ -31,7 +31,7 @@ interface PieChartWidgetProps {
 }
 
 export default function PieChartWidget({ data, config }: PieChartWidgetProps) {
-    if (!data.length) return null;
+    if (!data || !data.length) return null;
 
     const keys = Object.keys(data[0]);
     const nameKey = keys.find((k) => typeof data[0][k] === 'string') ?? keys[0];

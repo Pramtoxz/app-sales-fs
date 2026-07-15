@@ -28,7 +28,7 @@ interface TableWidgetProps {
 }
 
 export default function TableWidget({ data, config }: TableWidgetProps) {
-    if (!data.length) return null;
+    if (!data || !data.length) return null;
 
     const columns = Object.keys(data[0]).filter((k) => !SKIP_KEYS.includes(k));
 
