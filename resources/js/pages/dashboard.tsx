@@ -13,7 +13,6 @@ import {
     Package,
     Trophy,
     BarChart3,
-    PieChart as PieChartIcon,
     Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,15 +26,18 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
     Legend,
+    Cell,
 } from 'recharts';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-const CHART_COLORS = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+const DISTINCT_COLORS = [
+    '#2563eb', '#16a34a', '#dc2626', '#f59e0b', '#7c3aed',
+    '#0891b2', '#db2777', '#ea580c', '#4f46e5', '#059669',
+    '#be185d', '#0d9488', '#6d28d9', '#ca8a04', '#e11d48',
+    '#0284c7', '#9333ea', '#b45309', '#047857', '#7e22ce',
+];
 
 interface Stats {
     total_dealers?: number;
@@ -85,18 +87,24 @@ interface Props {
     fkDealer: string | null;
 }
 
+function truncate(str: string, max: number): string {
+    return str.length > max ? str.substring(0, max) + '...' : str;
+}
+
 function StatCard({
     icon: Icon,
     label,
     value,
     sub,
     color,
+    badge,
 }: {
     icon: React.ElementType;
     label: string;
     value: string | number;
-    sub?: string;
+    sub?: React.ReactNode;
     color: string;
+    badge?: { text: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' };
 }) {
     return (
         <Card className="relative overflow-hidden">
@@ -104,7 +112,10 @@ function StatCard({
                 <div className="flex items-start justify-between">
                     <div className="space-y-1">
                         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</p>
-                        <p className="text-2xl font-bold tabular-nums">{value}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-2xl font-bold tabular-nums">{value}</p>
+                            {badge && <Badge variant={badge.variant} className="text-[10px]">{badge.text}</Badge>}
+                        </div>
                         {sub && <p className="text-muted-foreground text-xs">{sub}</p>}
                     </div>
                     <div className={`rounded-lg p-2 ${color}`}>
@@ -113,30 +124,6 @@ function StatCard({
                 </div>
             </CardContent>
         </Card>
-    );
-}
-
-function ProgressRing({ percentage, size = 64, stroke = 6 }: { percentage: number; size?: number; stroke?: number }) {
-    const radius = (size - stroke) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (Math.min(percentage, 100) / 100) * circumference;
-    const color = percentage >= 100 ? '#16a34a' : percentage >= 50 ? '#f59e0b' : '#ef4444';
-
-    return (
-        <svg width={size} height={size} className="rotate-[-90deg]">
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted" />
-            <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={color}
-                strokeWidth={stroke}
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-            />
-        </svg>
     );
 }
 
@@ -198,7 +185,6 @@ export default function Dashboard({ isKacab }: Props) {
             <Head title="Dashboard" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
@@ -208,31 +194,22 @@ export default function Dashboard({ isKacab }: Props) {
                             {isKacab ? 'Performa dealer dan tim FLP Anda' : 'Ringkasan performa seluruh dealer'}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="month"
-                            value={bulan}
-                            onChange={(e) => setBulan(e.target.value)}
-                            className="w-40"
-                        />
-                    </div>
+                    <Input type="month" value={bulan} onChange={(e) => setBulan(e.target.value)} className="w-40" />
                 </div>
 
-                {/* Stats Grid */}
-                {isKacab ? (
-                    <KacabStats stats={stats} />
-                ) : (
-                    <AdminStats stats={stats} bulanLabel={bulanLabel} />
-                )}
-
-                {/* Charts */}
-                {isKacab ? (
-                    <KacabCharts data={data} />
-                ) : (
-                    <AdminCharts data={data} bulanLabel={bulanLabel} />
-                )}
+                {isKacab ? <KacabStats stats={stats} /> : <AdminStats stats={stats} bulanLabel={bulanLabel} />}
+                {isKacab ? <KacabCharts data={data} /> : <AdminCharts data={data} bulanLabel={bulanLabel} />}
             </div>
         </AppLayout>
+    );
+}
+
+function ProspekSub({ total, deal }: { total: number; deal: number }) {
+    const rate = total > 0 ? ((deal / total) * 100).toFixed(1) : '0';
+    return (
+        <span className="text-muted-foreground text-xs">
+            {deal} deal &middot; <span className="font-medium text-foreground">{rate}% konversi</span>
+        </span>
     );
 }
 
@@ -247,10 +224,17 @@ function AdminStats({ stats, bulanLabel }: { stats: Stats; bulanLabel: string })
                 icon={TrendingUp}
                 label="Capai"
                 value={`${stats.persentase}%`}
-                sub={stats.persentase >= 100 ? 'Tercapai!' : 'Dalam proses'}
+                sub={stats.total_target > 0 ? `${stats.total_terjual} dari ${stats.total_target} unit` : 'Belum ada target'}
                 color={stats.persentase >= 100 ? 'bg-green-600' : stats.persentase >= 50 ? 'bg-amber-500' : 'bg-red-500'}
+                badge={stats.persentase > 100 ? { text: 'Melebihi target', variant: 'outline' } : undefined}
             />
-            <StatCard icon={MessageSquare} label="Prospek" value={stats.total_prospek} sub={`${stats.deal_prospek ?? 0} deal`} color="bg-cyan-600" />
+            <StatCard
+                icon={MessageSquare}
+                label="Prospek"
+                value={stats.total_prospek.toLocaleString('id-ID')}
+                sub={<ProspekSub total={stats.total_prospek} deal={stats.deal_prospek ?? 0} />}
+                color="bg-cyan-600"
+            />
         </div>
     );
 }
@@ -265,10 +249,17 @@ function KacabStats({ stats }: { stats: Stats }) {
                 icon={TrendingUp}
                 label="Capai"
                 value={`${stats.persentase}%`}
-                sub={stats.persentase >= 100 ? 'Tercapai!' : 'Dalam proses'}
+                sub={stats.total_target > 0 ? `${stats.total_terjual} dari ${stats.total_target} unit` : 'Belum ada target'}
                 color={stats.persentase >= 100 ? 'bg-green-600' : stats.persentase >= 50 ? 'bg-amber-500' : 'bg-red-500'}
+                badge={stats.persentase > 100 ? { text: 'Melebihi target', variant: 'outline' } : undefined}
             />
-            <StatCard icon={Handshake} label="Prospek" value={stats.total_prospek} sub={`${stats.deal_prospek ?? 0} deal`} color="bg-cyan-600" />
+            <StatCard
+                icon={Handshake}
+                label="Prospek"
+                value={stats.total_prospek.toLocaleString('id-ID')}
+                sub={<ProspekSub total={stats.total_prospek} deal={stats.deal_prospek ?? 0} />}
+                color="bg-cyan-600"
+            />
         </div>
     );
 }
@@ -278,31 +269,30 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
     const topDealers = data.top_dealers ?? [];
 
     const chartData = dealerPerf
-        .filter((d) => d.target > 0)
-        .slice(0, 15)
+        .filter((d) => d.target > 0 || d.terjual > 0)
+        .slice(0, 10)
         .map((d) => ({
-            nama: d.dealer.length > 15 ? d.dealer.substring(0, 15) + '...' : d.dealer,
+            nama: truncate(d.dealer, 12),
             Target: d.target,
             Terjual: d.terjual,
         }));
 
     return (
         <div className="grid gap-4 lg:grid-cols-3">
-            {/* Bar Chart */}
             <Card className="lg:col-span-2">
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <BarChart3 className="text-muted-foreground h-4 w-4" />
                         <CardTitle className="text-sm font-semibold">Target vs Terjual per Dealer</CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">{bulanLabel}</p>
+                    <p className="text-muted-foreground text-xs">{bulanLabel} &middot; Top 10 dealer</p>
                 </CardHeader>
                 <CardContent>
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={320}>
-                            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 60 }}>
+                            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 50 }}>
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis dataKey="nama" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" interval={0} />
+                                <XAxis dataKey="nama" tick={{ fontSize: 10 }} angle={-35} textAnchor="end" interval={0} height={60} />
                                 <YAxis tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
@@ -319,7 +309,6 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                 </CardContent>
             </Card>
 
-            {/* Top Dealers */}
             <Card>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
@@ -341,7 +330,12 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                                         {i + 1}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium">{d.dealer}</p>
+                                        <div className="flex items-center justify-between">
+                                            <p className="truncate text-sm font-medium">{d.dealer}</p>
+                                            <span className="text-muted-foreground ml-2 shrink-0 text-xs tabular-nums">
+                                                {d.target > 0 ? `${d.terjual}/${d.target}` : `${d.terjual} unit`}
+                                            </span>
+                                        </div>
                                         <div className="mt-1 flex items-center gap-2">
                                             <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                                                 <div
@@ -352,7 +346,9 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                                                     }}
                                                 />
                                             </div>
-                                            <span className="text-muted-foreground w-12 text-right text-xs tabular-nums">
+                                            <span className={`w-12 text-right text-xs font-medium tabular-nums ${
+                                                d.persentase >= 100 ? 'text-green-600' : d.persentase >= 50 ? 'text-amber-600' : 'text-red-600'
+                                            }`}>
                                                 {d.persentase}%
                                             </span>
                                         </div>
@@ -373,39 +369,53 @@ function KacabCharts({ data }: { data: DashboardData }) {
     const flpPerf = data.flp_performance ?? [];
     const stockData = data.stock_data ?? [];
 
-    const flpChartData = flpPerf.map((f) => ({
-        nama: (f.nama ?? 'FLP ' + f.id_flp).length > 12 ? (f.nama ?? '').substring(0, 12) + '...' : f.nama ?? 'FLP ' + f.id_flp,
-        Target: Number(f.total_target),
-        Terjual: Number(f.total_terjual),
-    }));
+    const flpChartData = flpPerf
+        .sort((a, b) => Number(b.persentase) - Number(a.persentase))
+        .slice(0, 10)
+        .map((f) => ({
+            nama: truncate(f.nama ?? 'FLP ' + f.id_flp, 14),
+            Target: Number(f.total_target),
+            Terjual: Number(f.total_terjual),
+            persentase: Number(f.persentase),
+        }));
 
-    const stockColors = stockData.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+    const stockChart = stockData
+        .sort((a, b) => b.jumlah - a.jumlah)
+        .slice(0, 12)
+        .map((s) => ({
+            tipe: truncate(s.tipe, 18),
+            jumlah: Number(s.jumlah),
+        }));
+
+    const flpHeight = Math.max(240, flpChartData.length * 44);
+    const stockHeight = Math.max(240, stockChart.length * 36);
 
     return (
         <div className="grid gap-4 lg:grid-cols-2">
-            {/* FLP Performance */}
             <Card>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <Users className="text-muted-foreground h-4 w-4" />
                         <CardTitle className="text-sm font-semibold">Performa FLP</CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">Target vs terjual per FLP</p>
+                    <p className="text-muted-foreground text-xs">
+                        Top {Math.min(flpPerf.length, 10)} dari {flpPerf.length} FLP &middot; Target vs terjual
+                    </p>
                 </CardHeader>
                 <CardContent>
                     {flpChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={Math.max(200, flpChartData.length * 40)}>
-                            <BarChart data={flpChartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                        <ResponsiveContainer width="100%" height={flpHeight}>
+                            <BarChart data={flpChartData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                                <YAxis type="category" dataKey="nama" width={100} tick={{ fontSize: 11 }} />
+                                <YAxis type="category" dataKey="nama" width={110} tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                                    formatter={(value: number) => value.toLocaleString('id-ID')}
+                                    formatter={(value: number, name: string) => [value.toLocaleString('id-ID'), name]}
                                 />
                                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                                <Bar dataKey="Target" fill="#94a3b8" radius={[0, 4, 4, 0]} />
-                                <Bar dataKey="Terjual" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                                <Bar dataKey="Target" fill="#94a3b8" radius={[0, 4, 4, 0]} barSize={16} />
+                                <Bar dataKey="Terjual" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={16} />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
@@ -414,40 +424,37 @@ function KacabCharts({ data }: { data: DashboardData }) {
                 </CardContent>
             </Card>
 
-            {/* Stock Unit */}
             <Card>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <Package className="text-muted-foreground h-4 w-4" />
                         <CardTitle className="text-sm font-semibold">Stok Unit</CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">Ketersediaan unit Ready for Sale</p>
+                    <p className="text-muted-foreground text-xs">
+                        {stockData.reduce((s, d) => s + Number(d.jumlah), 0)} unit RFS &middot; {stockData.length} tipe
+                    </p>
                 </CardHeader>
                 <CardContent>
-                    {stockData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={280}>
-                            <PieChart>
-                                <Pie
-                                    data={stockData}
-                                    dataKey="jumlah"
-                                    nameKey="tipe"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={100}
-                                    label={({ tipe, jumlah }) => `${tipe}: ${jumlah}`}
-                                >
-                                    {stockData.map((_, i) => (
-                                        <Cell key={i} fill={stockColors[i]} />
-                                    ))}
-                                </Pie>
+                    {stockChart.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={stockHeight}>
+                            <BarChart data={stockChart} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                                <YAxis type="category" dataKey="tipe" width={130} tick={{ fontSize: 10 }} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
                                     formatter={(value: number) => [`${value} unit`, 'Jumlah']}
+                                    labelFormatter={(label) => label}
                                 />
-                            </PieChart>
+                                <Bar dataKey="jumlah" radius={[0, 4, 4, 0]} barSize={18}>
+                                    {stockChart.map((_, i) => (
+                                        <Cell key={i} fill={DISTINCT_COLORS[i % DISTINCT_COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyState icon={PieChartIcon} message="Belum ada data stok" />
+                        <EmptyState icon={Package} message="Belum ada data stok" />
                     )}
                 </CardContent>
             </Card>
