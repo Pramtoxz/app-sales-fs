@@ -29,7 +29,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
 ];
 
-export default function Dashboard({ widgets = [], isKacab }: Props) {
+export default function Dashboard({ widgets: rawWidgets, isKacab }: Props) {
+    const widgets = Array.isArray(rawWidgets) ? rawWidgets : [];
     const [widgetData, setWidgetData] = useState<Record<number, unknown>>({});
     const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
 

@@ -68,7 +68,7 @@ class DashboardController extends Controller
         $totalFlp = $flpQuery->count();
 
         $targetQuery = DB::connection('pgsql_sales')->table('H1_DOS.tbl_target_flp')
-            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM]);
+            ->where('bulan_tahun', $bulanYM);
         if ($kodeDealer) $targetQuery->where('fk_dealer', $kodeDealer);
         $totalTarget = (int) $targetQuery->sum('target');
 
@@ -119,7 +119,7 @@ class DashboardController extends Controller
                 SELECT ttf.id_flp, COALESCE(flp.nama, 'FLP ' || ttf.id_flp) as nama, flp.foto, SUM(ttf.target) as total_target
                 FROM \"H1_DOS\".\"tbl_target_flp\" ttf
                 LEFT JOIN \"public\".\"flp\" ON flp.id_flp = ttf.id_flp
-                WHERE CASE WHEN position('/' in ttf.bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(ttf.bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(ttf.bulan_tahun::date, 'YYYY-MM') END = ?
+                WHERE ttf.bulan_tahun = ?
                 " . ($kodeDealer ? 'AND ttf.fk_dealer = ?' : '') . "
                 GROUP BY ttf.id_flp, flp.nama, flp.foto
             ),
@@ -178,7 +178,7 @@ class DashboardController extends Controller
         if ($kodeDealer) $dealerQuery->where('kd_dealer_md', $kodeDealer);
         $dealers = $dealerQuery->get();
 
-        $targets = MTargetDealer::whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM])
+        $targets = MTargetDealer::where('bulan_tahun', $bulanYM)
             ->get()
             ->groupBy('kode_dealer');
 

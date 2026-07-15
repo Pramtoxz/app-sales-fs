@@ -82,7 +82,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 const csrfToken = () =>
     document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 
-export default function KelolaDashboard({ widgetTypes, dataSources, widgets: initialWidgets, isKacab }: Props) {
+export default function KelolaDashboard({ widgetTypes: rawWidgetTypes, dataSources: rawDataSources, widgets: rawWidgets, isKacab }: Props) {
+    const widgetTypes = Array.isArray(rawWidgetTypes) ? rawWidgetTypes : [];
+    const dataSources = Array.isArray(rawDataSources) ? rawDataSources : [];
+    const initialWidgets = Array.isArray(rawWidgets) ? rawWidgets : [];
+
     const [widgets, setWidgets] = useState<Widget[]>(initialWidgets);
     const [widgetData, setWidgetData] = useState<Record<number, unknown>>({});
     const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
@@ -109,7 +113,10 @@ export default function KelolaDashboard({ widgetTypes, dataSources, widgets: ini
                 credentials: 'same-origin',
             })
                 .then((res) => res.json())
-                .then((data) => setDealers(data.dealers ?? data ?? []))
+                .then((data) => {
+                    const list = data?.dealers ?? data?.data ?? data;
+                    setDealers(Array.isArray(list) ? list : []);
+                })
                 .catch(() => {});
         }
     }, [isKacab]);

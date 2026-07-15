@@ -47,7 +47,7 @@ class DashboardService
             ->table('H1_DOS.tbl_target_flp')
             ->where('id_flp', $idFlp)
             ->where('fk_dealer', $dealerCode)
-            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanYM])
+            ->where('bulan_tahun', $bulanYM)
             ->sum('target');
 
         $baseQuery = DB::connection('pgsql_sales')

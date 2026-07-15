@@ -6,6 +6,7 @@ use App\Models\Flp;
 use App\Models\M_Dealer;
 use App\Models\MTargetDealer;
 use App\Models\TargetFlp;
+use App\Support\BulanTahunHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,7 @@ class TargetController extends Controller
             ->value('nm_dealer') ?? $kode_dealer;
 
         $seriesList = MTargetDealer::where('kode_dealer', $kode_dealer)
-            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [Carbon::now()->format('Y-m')])
+            ->where('bulan_tahun', Carbon::now()->format('Y-m'))
             ->pluck('series')
             ->filter()
             ->unique()
@@ -75,7 +76,7 @@ class TargetController extends Controller
             $kodeDealerList = $dealers->pluck('kd_dealer_md')->toArray();
 
             $targets = MTargetDealer::whereIn('kode_dealer', $kodeDealerList)
-                ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanTahun])
+                ->where('bulan_tahun', $bulanTahun)
                 ->get()
                 ->groupBy('kode_dealer');
 
@@ -88,9 +89,7 @@ class TargetController extends Controller
                     'detail' => $dealerTargets->map(function ($t) {
                         return [
                             'series' => $t->series,
-                            'bulan_tahun' => str_contains($t->bulan_tahun, '/')
-                            ? Carbon::createFromFormat('m/d/Y', $t->bulan_tahun)->format('m/Y')
-                            : Carbon::parse($t->bulan_tahun)->format('m/Y'),
+                            'bulan_tahun' => BulanTahunHelper::displayShort($t->bulan_tahun),
                             'target' => $t->target,
                         ];
                     })->values(),
@@ -123,12 +122,12 @@ class TargetController extends Controller
             $idFlpList = $flpList->pluck('id_flp')->toArray();
 
             $targets = TargetFlp::whereIn('id_flp', $idFlpList)
-                ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanTahun])
+                ->where('bulan_tahun', $bulanTahun)
                 ->get()
                 ->groupBy('id_flp');
 
             $targetDealer = MTargetDealer::where('kode_dealer', $kode_dealer)
-                ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanTahun])
+                ->where('bulan_tahun', $bulanTahun)
                 ->get();
 
             $totalTargetDealer = $targetDealer->sum('target');
@@ -146,11 +145,7 @@ class TargetController extends Controller
                         return [
                             'id' => $item->id,
                             'series' => $item->series,
-                            'bulan_tahun' => $item->bulan_tahun
-                                ? (str_contains($item->bulan_tahun, '/')
-                                    ? Carbon::createFromFormat('m/d/Y', $item->bulan_tahun)->format('m/Y')
-                                    : Carbon::parse($item->bulan_tahun)->format('m/Y'))
-                                : '-',
+                            'bulan_tahun' => $item->bulan_tahun ? BulanTahunHelper::displayShort($item->bulan_tahun) : '-',
                             'target' => $item->target,
                             'fk_dealer' => $item->fk_dealer,
                         ];
@@ -197,7 +192,7 @@ class TargetController extends Controller
         $bulanTahun = $request->input('bulan_tahun', Carbon::now()->format('Y-m'));
 
         $series = MTargetDealer::where('kode_dealer', $kode_dealer)
-            ->whereRaw("CASE WHEN position('/' in bulan_tahun) > 0 THEN TO_CHAR(TO_DATE(bulan_tahun, 'MM/DD/YYYY'), 'YYYY-MM') ELSE TO_CHAR(bulan_tahun::date, 'YYYY-MM') END = ?", [$bulanTahun])
+            ->where('bulan_tahun', $bulanTahun)
             ->pluck('series')
             ->filter()
             ->unique()
@@ -228,7 +223,7 @@ class TargetController extends Controller
                 if (empty($row['kode_dealer'])) continue;
 
                 try {
-                    $bt = Carbon::createFromFormat('Y-m', trim($row['bulan_tahun']))->format('m/01/Y');
+                    $bt = BulanTahunHelper::normalize($row['bulan_tahun']);
                 } catch (\Exception $e) {
                     $errors[] = "Dealer {$row['kode_dealer']}: format bulan_tahun tidak valid ({$row['bulan_tahun']})";
                     continue;
@@ -281,7 +276,7 @@ class TargetController extends Controller
                 'fk_dealer' => $request->fk_dealer,
                 'id_flp' => $request->id_flp,
                 'series' => $request->series,
-                'bulan_tahun' => Carbon::createFromFormat('Y-m', $request->bulan_tahun)->format('m/01/Y'),
+                'bulan_tahun' => BulanTahunHelper::normalize($request->bulan_tahun),
                 'target' => $request->target,
             ];
 
