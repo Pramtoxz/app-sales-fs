@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\TargetSalesController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\IndentController;
@@ -29,7 +28,6 @@ Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::post('/auth/biometric/register', [AuthController::class, 'biometricRegister']);
     Route::post('/auth/biometric/revoke', [AuthController::class, 'biometricRevoke']);
     
-    Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/target-sales', [TargetSalesController::class, 'index']);
     Route::get('/stock', [StockController::class, 'index']);
     Route::get('/indent', [IndentController::class, 'index']);

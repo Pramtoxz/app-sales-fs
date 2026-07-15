@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DashboardWidgetController;
 use App\Http\Controllers\FlpWebController;
 use App\Http\Controllers\IndentWebController;
 use App\Http\Controllers\LoginController;
@@ -32,16 +31,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('dashboard/data/summary', [DashboardController::class, 'summary']);
-    Route::get('dashboard/data/flp-performance', [DashboardController::class, 'flpPerformance']);
-    Route::get('dashboard/data/target-vs-actual', [DashboardController::class, 'targetVsActual']);
-    Route::get('dashboard/data/prospek', [DashboardController::class, 'prospek']);
-    Route::get('dashboard/data/stock', [DashboardController::class, 'stock']);
-    Route::get('dashboard/data/indent', [DashboardController::class, 'indent']);
-    Route::get('dashboard/data/dealers', [DashboardController::class, 'dealers']);
-    Route::get('dashboard/data/data-sources', [DashboardController::class, 'dataSources']);
-    Route::get('dashboard/data/widget-types', [DashboardController::class, 'widgetTypes']);
+    Route::get('dashboard/data', [DashboardController::class, 'getData']);
 
     Route::middleware(['check.menu.access'])->group(function () {
         Route::get('target-dealer', [TargetController::class, 'index'])->name('target-dealer.index');
@@ -79,12 +69,5 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('performance', [PerformanceWebController::class, 'index'])->name('performance.index');
         Route::get('performance/data', [PerformanceWebController::class, 'getData'])->name('performance.data');
-
-        Route::get('settings/dashboard', [DashboardWidgetController::class, 'index'])->name('settings.dashboard.index');
-        Route::post('settings/dashboard', [DashboardWidgetController::class, 'store']);
-        Route::put('settings/dashboard/{id}', [DashboardWidgetController::class, 'update']);
-        Route::put('settings/dashboard/layout', [DashboardWidgetController::class, 'updateLayout']);
-        Route::delete('settings/dashboard/{id}', [DashboardWidgetController::class, 'destroy']);
-        Route::post('settings/dashboard/reset', [DashboardWidgetController::class, 'reset']);
     });
 });
