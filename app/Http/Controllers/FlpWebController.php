@@ -40,7 +40,7 @@ class FlpWebController extends Controller
         }
 
         $flps = Flp::where('kode_dealer', $request->kode_dealer)
-            ->select('id_flp', 'nama', 'jabatan', 'kode_jabatan', 'team', 'is_active', 'last_login', 'foto')
+            ->select('id_flp', 'nama', 'jabatan', 'team', 'is_active', 'last_login', 'foto')
             ->orderBy('nama')
             ->get()
             ->map(function ($flp) {

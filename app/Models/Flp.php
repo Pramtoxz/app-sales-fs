@@ -20,7 +20,6 @@ class Flp extends Model
         'nama',
         'kode_dealer',
         'jabatan',
-        'kode_jabatan',
         'user_id',
         'team',
         'last_login',
