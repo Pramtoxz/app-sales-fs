@@ -21,7 +21,6 @@ class Flp extends Model
         'kode_dealer',
         'jabatan',
         'user_id',
-        'team',
         'last_login',
         'is_active',
         'foto',
@@ -30,8 +29,7 @@ class Flp extends Model
     ];
 
     protected $casts = [
-        'target' => 'integer',
-        'id_level' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     public function user()

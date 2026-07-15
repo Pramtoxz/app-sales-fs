@@ -15,7 +15,6 @@ class FlpResource extends JsonResource
             'nama' => $this->nama,
             'kd_dlr' => $this->kode_dealer,
             'jabatan' => $this->jabatan,
-            'team' => $this->team,
             'foto' => $this->foto ? url($this->foto) : null,
         ];
     }

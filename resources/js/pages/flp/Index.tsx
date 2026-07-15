@@ -26,15 +26,12 @@ import {
 } from '@/components/ui/table';
 import { toast } from 'sonner';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'FLP', href: '/flp' },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'FLP', href: '/flp' }];
 
 interface FlpItem {
     id_flp: string;
     nama: string;
     jabatan: string;
-    team: string;
     is_active: boolean;
     last_login: string;
     foto: string | null;
@@ -65,7 +62,9 @@ export default function Index() {
         }
         setLoading(true);
         try {
-            const res = await fetch(`/flp/data?kode_dealer=${encodeURIComponent(kodeDealer)}`);
+            const res = await fetch(
+                `/flp/data?kode_dealer=${encodeURIComponent(kodeDealer)}`,
+            );
             const json = await res.json();
 
             if (json.success) {
@@ -99,9 +98,11 @@ export default function Index() {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">Daftar FLP</CardTitle>
+                            <CardTitle className="text-lg">
+                                Daftar FLP
+                            </CardTitle>
                             {data.length > 0 && (
-                                <span className="text-muted-foreground text-sm">
+                                <span className="text-sm text-muted-foreground">
                                     {data.length} FLP
                                 </span>
                             )}
@@ -121,7 +122,10 @@ export default function Index() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {dealers.map((d) => (
-                                            <SelectItem key={d.kd_dealer_md} value={d.kd_dealer_md}>
+                                            <SelectItem
+                                                key={d.kd_dealer_md}
+                                                value={d.kd_dealer_md}
+                                            >
                                                 {d.nm_dealer} ({d.kd_dealer_md})
                                             </SelectItem>
                                         ))}
@@ -129,8 +133,14 @@ export default function Index() {
                                 </Select>
                             </div>
                             {!isKacab && (
-                                <Button onClick={loadData} disabled={loading || !kodeDealer} size="sm">
-                                    {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                                <Button
+                                    onClick={loadData}
+                                    disabled={loading || !kodeDealer}
+                                    size="sm"
+                                >
+                                    {loading ? (
+                                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                    ) : null}
                                     Tampilkan
                                 </Button>
                             )}
@@ -143,27 +153,38 @@ export default function Index() {
                                         <TableHead>FLP</TableHead>
                                         <TableHead>ID</TableHead>
                                         <TableHead>Jabatan</TableHead>
-                                        <TableHead>Team</TableHead>
-                                        <TableHead className="text-center">Status</TableHead>
+                                        <TableHead className="text-center">
+                                            Status
+                                        </TableHead>
                                         <TableHead>Last Login</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-muted-foreground h-24 text-center">
+                                            <TableCell
+                                                colSpan={6}
+                                                className="h-24 text-center text-muted-foreground"
+                                            >
                                                 <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                                             </TableCell>
                                         </TableRow>
                                     ) : !kodeDealer ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-muted-foreground h-24 text-center">
-                                                Pilih dealer untuk melihat daftar FLP
+                                            <TableCell
+                                                colSpan={6}
+                                                className="h-24 text-center text-muted-foreground"
+                                            >
+                                                Pilih dealer untuk melihat
+                                                daftar FLP
                                             </TableCell>
                                         </TableRow>
                                     ) : data.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-muted-foreground h-24 text-center">
+                                            <TableCell
+                                                colSpan={6}
+                                                className="h-24 text-center text-muted-foreground"
+                                            >
                                                 Tidak ada data FLP
                                             </TableCell>
                                         </TableRow>
@@ -173,23 +194,45 @@ export default function Index() {
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
                                                         <Avatar className="h-8 w-8">
-                                                            <AvatarImage src={flp.foto ?? undefined} alt={flp.nama} />
+                                                            <AvatarImage
+                                                                src={
+                                                                    flp.foto ??
+                                                                    undefined
+                                                                }
+                                                                alt={flp.nama}
+                                                            />
                                                             <AvatarFallback className="text-xs">
-                                                                {flp.nama?.charAt(0) ?? '?'}
+                                                                {flp.nama?.charAt(
+                                                                    0,
+                                                                ) ?? '?'}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <span className="font-medium">{flp.nama}</span>
+                                                        <span className="font-medium">
+                                                            {flp.nama}
+                                                        </span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-mono text-sm">{flp.id_flp}</TableCell>
-                                                <TableCell className="text-sm">{flp.jabatan}</TableCell>
-                                                <TableCell className="text-sm">{flp.team}</TableCell>
+                                                <TableCell className="font-mono text-sm">
+                                                    {flp.id_flp}
+                                                </TableCell>
+                                                <TableCell className="text-sm">
+                                                    {flp.jabatan}
+                                                </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Badge variant={flp.is_active ? 'default' : 'destructive'} className="text-[10px]">
-                                                        {flp.is_active ? 'Aktif' : 'Non-Aktif'}
+                                                    <Badge
+                                                        variant={
+                                                            flp.is_active
+                                                                ? 'default'
+                                                                : 'destructive'
+                                                        }
+                                                        className="text-[10px]"
+                                                    >
+                                                        {flp.is_active
+                                                            ? 'Aktif'
+                                                            : 'Non-Aktif'}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-muted-foreground text-sm">
+                                                <TableCell className="text-sm text-muted-foreground">
                                                     {flp.last_login}
                                                 </TableCell>
                                             </TableRow>
