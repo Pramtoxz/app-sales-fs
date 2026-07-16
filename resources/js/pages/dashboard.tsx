@@ -67,6 +67,7 @@ interface FlpPerf {
 
 interface StockItem {
     tipe: string;
+    categori: string;
     jumlah: number;
 }
 
@@ -380,7 +381,6 @@ function KacabCharts({ data }: { data: DashboardData }) {
         }));
 
     const stockChart = stockData
-        .sort((a, b) => b.jumlah - a.jumlah)
         .slice(0, 12)
         .map((s) => ({
             tipe: truncate(s.tipe, 18),

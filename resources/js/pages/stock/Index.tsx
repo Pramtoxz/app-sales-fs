@@ -39,6 +39,7 @@ interface StockItem {
 
 interface StockGroup {
     tipe: string;
+    categori: string;
     total: number;
     items: StockItem[];
 }
@@ -169,27 +170,28 @@ export default function Index() {
                         <div className="rounded-md border">
                             <Table>
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Tipe</TableHead>
-                                        <TableHead className="text-right">Total</TableHead>
-                                    </TableRow>
+                                        <TableRow>
+                                            <TableHead>Tipe</TableHead>
+                                            <TableHead className="text-center">Kategori</TableHead>
+                                            <TableHead className="text-right">Total</TableHead>
+                                        </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={2} className="text-muted-foreground h-24 text-center">
+                                            <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
                                                 <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                                             </TableCell>
                                         </TableRow>
                                     ) : !kodeDealer ? (
                                         <TableRow>
-                                            <TableCell colSpan={2} className="text-muted-foreground h-24 text-center">
+                                            <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
                                                 Pilih dealer untuk melihat stock
                                             </TableCell>
                                         </TableRow>
                                     ) : data.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={2} className="text-muted-foreground h-24 text-center">
+                                            <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
                                                 Tidak ada data stock
                                             </TableCell>
                                         </TableRow>
@@ -205,6 +207,9 @@ export default function Index() {
                                                                     <span className="font-medium">{group.tipe}</span>
                                                                 </div>
                                                             </TableCell>
+                                                            <TableCell className="text-center">
+                                                                <Badge variant="outline">{group.categori}</Badge>
+                                                            </TableCell>
                                                             <TableCell className="text-right">
                                                                 <Badge variant="secondary">
                                                                     {group.total.toLocaleString('id-ID')} unit
@@ -215,7 +220,7 @@ export default function Index() {
                                                     <CollapsibleContent asChild>
                                                         <>
                                                             {group.items.map((item, idx) => (
-                                                                <TableRow key={`${group.tipe}-${item.kode_item}-${idx}`} className="bg-muted/30">
+                                                                    <TableRow key={`${group.tipe}-${item.kode_item}-${idx}`} className="bg-muted/30">
                                                                     <TableCell className="pl-12">
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="text-muted-foreground font-mono text-xs">
@@ -224,6 +229,7 @@ export default function Index() {
                                                                             <span className="text-sm">{item.warna ?? '-'}</span>
                                                                         </div>
                                                                     </TableCell>
+                                                                    <TableCell></TableCell>
                                                                     <TableCell className="text-right text-sm">
                                                                         {item.jumlah.toLocaleString('id-ID')}
                                                                     </TableCell>

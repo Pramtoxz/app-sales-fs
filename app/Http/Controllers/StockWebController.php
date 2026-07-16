@@ -42,7 +42,7 @@ class StockWebController extends Controller
         $search = $request->input('search', '');
         $kodeDealer = $request->kode_dealer;
 
-        $query = 'SELECT su.fk_item, mgm."DeskripsiType", w.warna, COUNT(*) AS jumlah
+        $query = 'SELECT su.fk_item, mgm."DeskripsiType", mgm."Categori", w.warna, COUNT(*) AS jumlah
             FROM "H1_DOS"."stokunit" AS su
             JOIN "H1_DOS"."mastergroupsegmenmotor" AS mgm
               ON SUBSTRING(su.fk_item FROM 1 FOR 3) = mgm."KodeType"
@@ -60,8 +60,8 @@ class StockWebController extends Controller
             $params[] = '%' . $search . '%';
         }
 
-        $query .= ' GROUP BY su.fk_item, mgm."DeskripsiType", w.warna
-            ORDER BY mgm."DeskripsiType", su.fk_item, jumlah DESC';
+        $query .= ' GROUP BY su.fk_item, mgm."DeskripsiType", mgm."Categori", w.warna
+            ORDER BY CASE mgm."Categori" WHEN \'CUB\' THEN 1 WHEN \'AT\' THEN 2 WHEN \'SPORT\' THEN 3 WHEN \'EV\' THEN 4 ELSE 5 END, mgm."DeskripsiType", su.fk_item, jumlah DESC';
 
         $results = DB::connection('pgsql_sales')->select($query, $params);
 
@@ -69,6 +69,7 @@ class StockWebController extends Controller
         foreach ($results as $row) {
             $grouped[$row->DeskripsiType][] = [
                 'kode_item' => $row->fk_item,
+                'categori' => $row->Categori,
                 'warna' => $row->warna,
                 'jumlah' => (int) $row->jumlah,
             ];
@@ -79,6 +80,7 @@ class StockWebController extends Controller
             $totalJumlah = array_sum(array_column($items, 'jumlah'));
             $data[] = [
                 'tipe' => $tipe,
+                'categori' => $items[0]['categori'] ?? '',
                 'total' => $totalJumlah,
                 'items' => $items,
             ];
