@@ -74,7 +74,7 @@ class IndentWebController extends Controller
               AND indent."fk_dealer"      = ?
               AND indent."Tgl_Antrian"     IS NOT NULL
             ORDER BY
-                CASE mgm."Categori" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END ASC,
+                CASE mgm."Categori" WHEN \'CUB\' THEN 1 WHEN \'AT\' THEN 2 WHEN \'SPORT\' THEN 3 WHEN \'EV\' THEN 4 ELSE 5 END ASC,
                 COALESCE(mgm."DeskripsiType", indent."Desc_Tipe") ASC,
                 indent."Tgl_Antrian" ASC
         ';
