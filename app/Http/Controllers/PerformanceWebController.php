@@ -46,7 +46,6 @@ class PerformanceWebController extends Controller
 
         $bulan = substr($bulanTahun, 5, 2);
         $tahun = substr($bulanTahun, 0, 4);
-        $bulanTahunFormat = sprintf('%s/01/%s', $bulan, $tahun);
         $startDate = sprintf('%s-%s-01', $tahun, $bulan);
         $endDate = Carbon::parse($startDate)->endOfMonth()->format('Y-m-d');
 
@@ -95,7 +94,7 @@ class PerformanceWebController extends Controller
             LEFT JOIN actual_summary acs ON acs.id_flp = ts.id_flp
             WHERE ts.total_target > 0
             ORDER BY persentase DESC
-        ", [$bulanTahunFormat, $kodeDealer, $startDate, $endDate, $kodeDealer]);
+        ", [$bulanTahun, $kodeDealer, $startDate, $endDate, $kodeDealer]);
 
         $leaderboard = [];
         foreach ($rankings as $rank) {

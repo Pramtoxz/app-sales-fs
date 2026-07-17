@@ -26,9 +26,7 @@ class PerformanceController extends Controller
         $endDate = $request->query('end_date', date('Y-m-t'));
         $limit = $request->query('limit', 20);
 
-        $bulan = date('m', strtotime($startDate));
-        $tahun = date('Y', strtotime($startDate));
-        $bulanTahunFormat = sprintf('%02d/01/%d', $bulan, $tahun);
+        $bulanTahunFormat = date('Y-m', strtotime($startDate));
 
         \Log::info('Performance Query Debug', [
             'start_date' => $startDate,
