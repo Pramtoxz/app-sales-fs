@@ -6,6 +6,7 @@ use App\Models\Flp;
 use App\Models\M_Dealer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,7 +51,7 @@ class FlpWebController extends Controller
                     'jabatan' => $flp->jabatan ?? '-',
                     'is_active' => $flp->is_active,
                     'last_login' => $flp->last_login ? \Carbon\Carbon::parse($flp->last_login)->format('d M Y H:i') : '-',
-                    'foto' => $flp->foto ? url($flp->foto) : null,
+                    'foto' => $flp->foto ? Storage::disk('public')->url($flp->foto) : null,
                 ];
             });
 

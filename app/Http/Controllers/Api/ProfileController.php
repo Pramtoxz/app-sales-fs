@@ -8,6 +8,7 @@ use App\Http\Resources\FlpResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -95,21 +96,14 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            $publicPath = public_path('photos/flp');
-            
-            if (!file_exists($publicPath)) {
-                mkdir($publicPath, 0755, true);
-            }
-
-            if ($flp->foto && file_exists(public_path($flp->foto))) {
-                unlink(public_path($flp->foto));
+            // Hapus foto lama dari storage jika ada
+            if ($flp->foto && Storage::disk('public')->exists($flp->foto)) {
+                Storage::disk('public')->delete($flp->foto);
             }
 
             $file = $request->file('photo');
             $filename = 'flp_' . $flp->id_flp . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move($publicPath, $filename);
-            
-            $path = 'photos/flp/' . $filename;
+            $path = $file->storeAs('photos/flp', $filename, 'public');
 
             $flp->foto = $path;
             $flp->save();
@@ -118,7 +112,7 @@ class ProfileController extends Controller
                 'success' => true,
                 'message' => 'Foto profil berhasil diupload',
                 'data' => [
-                    'photo_url' => url($path),
+                    'photo_url' => Storage::disk('public')->url($path),
                 ],
             ]);
         }

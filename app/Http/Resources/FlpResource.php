@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class FlpResource extends JsonResource
 {
@@ -15,7 +16,7 @@ class FlpResource extends JsonResource
             'nama' => $this->nama,
             'kd_dlr' => $this->kode_dealer,
             'jabatan' => $this->jabatan,
-            'foto' => $this->foto ? url($this->foto) : null,
+            'foto' => $this->foto ? Storage::disk('public')->url($this->foto) : null,
         ];
     }
 }
