@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -102,7 +103,7 @@ class PerformanceWebController extends Controller
                 'rank' => (int) $rank->rank,
                 'id_flp' => $rank->id_flp,
                 'nama' => $rank->nama,
-                'foto' => $rank->foto ? url($rank->foto) : null,
+                'foto' => $rank->foto ? Storage::disk('public')->url($rank->foto) : null,
                 'total_target' => (int) $rank->total_target,
                 'total_terjual' => (int) $rank->total_terjual,
                 'persentase' => (float) $rank->persentase,
