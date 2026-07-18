@@ -2,7 +2,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Edit, ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -230,7 +232,7 @@ export default function BannerIndex({ banners }: Props) {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-lg">Kelola Banner</CardTitle>
-                        <Button onClick={openCreate} size="sm">
+                        <Button id="tour-banner-create" onClick={openCreate} size="sm">
                             <Plus className="mr-1 h-4 w-4" />
                             Tambah Banner
                         </Button>
@@ -242,6 +244,7 @@ export default function BannerIndex({ banners }: Props) {
                                 untuk membuat.
                             </div>
                         ) : (
+                            <div id="tour-banner-table">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -354,6 +357,7 @@ export default function BannerIndex({ banners }: Props) {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

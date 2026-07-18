@@ -19,9 +19,18 @@ class LoginController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'recaptcha_token' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $recaptchaResponse = $this->verifyRecaptcha($credentials['recaptcha_token']);
+
+        if (!$recaptchaResponse['success']) {
+            return back()->withErrors([
+                'email' => 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.',
+            ])->onlyInput('email');
+        }
+
+        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $request->boolean('remember'))) {
             $user = Auth::user();
 
             if (empty($user->getRoles())) {
@@ -38,6 +47,21 @@ class LoginController extends Controller
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->onlyInput('email');
+    }
+
+    private function verifyRecaptcha(string $token): array
+    {
+        try {
+            $response = \Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => config('services.recaptcha.secret_key'),
+                'response' => $token,
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            \Log::warning('reCAPTCHA verification failed: ' . $e->getMessage());
+            return ['success' => false];
+        }
     }
 
     public function destroy(Request $request)

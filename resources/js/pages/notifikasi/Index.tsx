@@ -2,7 +2,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Loader2, Search, Send, X } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -123,6 +125,70 @@ export default function Index() {
 
     const selectedSales = salesList.find((s) => s.id_flp === selectedFlp);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_notif_tour');
+        if (!hasSeenTour) {
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps: [
+                    {
+                        element: '#tour-notif-title',
+                        popover: {
+                            title: 'Judul Notifikasi',
+                            description: 'Masukkan judul yang singkat dan jelas untuk notifikasi push.',
+                            side: 'bottom',
+                            align: 'start',
+                        },
+                    },
+                    {
+                        element: '#tour-notif-message',
+                        popover: {
+                            title: 'Isi Pesan',
+                            description: 'Tulis pesan notifikasi yang akan dikirim ke aplikasi mobile FLP (maks 1000 karakter).',
+                            side: 'bottom',
+                            align: 'start',
+                        },
+                    },
+                    {
+                        element: '#tour-notif-target',
+                        popover: {
+                            title: 'Target Penerima',
+                            description: isKacab
+                                ? 'Pilih apakah dikirim ke semua sales di dealer Anda atau sales tertentu.'
+                                : 'Pilih apakah dikirim ke semua sales di semua dealer atau sales tertentu.',
+                            side: 'bottom',
+                            align: 'start',
+                        },
+                    },
+                    {
+                        element: '#tour-notif-send',
+                        popover: {
+                            title: 'Kirim Notifikasi',
+                            description: 'Klik "Kirim Notifikasi" untuk mengirim push notification ke aplikasi mobile.',
+                            side: 'top',
+                            align: 'start',
+                        },
+                    },
+                ],
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_notif_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-notif-title')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, []);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Broadcast Notifikasi" />
@@ -133,7 +199,7 @@ export default function Index() {
                         <CardTitle className="text-lg">Broadcast Notifikasi</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-1">
+                        <div id="tour-notif-title" className="space-y-1">
                             <Label>
                                 Judul <span className="text-red-500">*</span>
                             </Label>
@@ -145,7 +211,7 @@ export default function Index() {
                             />
                         </div>
 
-                        <div className="space-y-1">
+                        <div id="tour-notif-message" className="space-y-1">
                             <Label>
                                 Pesan <span className="text-red-500">*</span>
                             </Label>
@@ -161,7 +227,7 @@ export default function Index() {
                             </p>
                         </div>
 
-                        <div className="space-y-1">
+                        <div id="tour-notif-target" className="space-y-1">
                             <Label>Target Penerima</Label>
                             <Select value={target} onValueChange={(v) => {
                                 setTarget(v as 'all' | 'specific');
@@ -260,7 +326,7 @@ export default function Index() {
                             </div>
                         )}
 
-                        <div className="flex items-center gap-3 pt-2">
+                        <div id="tour-notif-send" className="flex items-center gap-3 pt-2">
                             <Button onClick={handleSend} disabled={sending}>
                                 {sending ? (
                                     <Loader2 className="mr-1 h-4 w-4 animate-spin" />
