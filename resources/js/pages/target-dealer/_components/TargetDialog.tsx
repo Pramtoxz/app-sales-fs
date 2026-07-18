@@ -74,7 +74,7 @@ export function TargetDialog({
         }
 
         const kuota = found.sisa + targetLama;
-        return { ...found, kuota };
+        return { ...found, kuota, targetLama };
     };
 
     const seriesInfo = getSeriesSisaInfo();
@@ -110,7 +110,9 @@ export function TargetDialog({
             const kuota = seriesData.sisa + targetLama;
             if (parseInt(formTarget) > kuota) {
                 toast.error(
-                    `Target ${formSeries} tidak boleh melebihi sisa kuota (${kuota.toLocaleString('id-ID')})`,
+                    editingId && targetLama > 0
+                        ? `Target ${formSeries} maksimal ${kuota.toLocaleString('id-ID')} unit (sisa ${seriesData.sisa.toLocaleString('id-ID')} + target saat ini ${targetLama.toLocaleString('id-ID')})`
+                        : `Target ${formSeries} tidak boleh melebihi sisa kuota (${seriesData.sisa.toLocaleString('id-ID')} unit)`,
                 );
                 return;
             }
@@ -202,7 +204,16 @@ export function TargetDialog({
                             <p
                                 className={`text-xs font-semibold ${getSisaColor(seriesInfo.kuota, seriesInfo.target_dealer)}`}
                             >
-                                Sisa kuota: {seriesInfo.kuota.toLocaleString('id-ID')} unit
+                                {editingId && seriesInfo.targetLama > 0 ? (
+                                    <>
+                                        Kuota tersedia: {seriesInfo.kuota.toLocaleString('id-ID')} unit
+                                        <span className="font-normal text-muted-foreground">
+                                            {' '}(sisa {seriesInfo.sisa.toLocaleString('id-ID')} + target saat ini {seriesInfo.targetLama.toLocaleString('id-ID')})
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>Sisa kuota: {seriesInfo.sisa.toLocaleString('id-ID')} unit</>
+                                )}
                             </p>
                         )}
                     </div>

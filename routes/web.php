@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('banner', [BannerController::class, 'index'])->name('banner.index');
         Route::get('banner/create', [BannerController::class, 'create'])->name('banner.create');
         Route::post('banner', [BannerController::class, 'store'])->name('banner.store');
+        Route::get('banner/{id}', [BannerController::class, 'show'])->name('banner.show');
         Route::get('banner/{id}/edit', [BannerController::class, 'edit'])->name('banner.edit');
         Route::put('banner/{id}', [BannerController::class, 'update'])->name('banner.update');
         Route::delete('banner/{id}', [BannerController::class, 'destroy'])->name('banner.destroy');

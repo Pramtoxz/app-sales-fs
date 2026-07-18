@@ -29,6 +29,7 @@ export function SeriesDialog({ open, onOpenChange, breakdown }: SeriesDialogProp
                 <DialogHeader>
                     <DialogTitle>Kuota Target per Series</DialogTitle>
                 </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -65,6 +66,7 @@ export function SeriesDialog({ open, onOpenChange, breakdown }: SeriesDialogProp
                         )}
                     </TableBody>
                 </Table>
+                </div>
             </DialogContent>
         </Dialog>
     );

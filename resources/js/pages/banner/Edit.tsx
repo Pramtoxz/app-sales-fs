@@ -53,13 +53,11 @@ export default function Edit({ banner }: Props) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Ukuran gambar maksimal 5MB');
-            return;
-        }
-
         try {
             const compressed = await compressImage(file, 1.9, 1920);
+            if (compressed.size < file.size) {
+                toast.success(`Gambar dikompres: ${formatFileSize(file.size)} → ${formatFileSize(compressed.size)}`);
+            }
             setImageFile(compressed);
             setImagePreview(URL.createObjectURL(compressed));
             setImageInfo(`${compressed.name} (${formatFileSize(compressed.size)})`);

@@ -41,6 +41,21 @@ class BannerController extends Controller
         return Inertia::render('banner/Create');
     }
 
+    public function show(int $id): Response
+    {
+        $user = Auth::user();
+        if (!$user->isIt() && !$user->isMd()) {
+            abort(403);
+        }
+
+        $banner = Banner::findOrFail($id);
+        $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
+
+        return Inertia::render('banner/Show', [
+            'banner' => $banner,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -51,7 +66,7 @@ class BannerController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'sort_order' => 'nullable|integer|min:0',
@@ -112,7 +127,7 @@ class BannerController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'sort_order' => 'nullable|integer|min:0',

@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Edit, Eye, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -49,6 +49,7 @@ export default function BannerIndex({ banners }: Props) {
     };
     const [deleteConfirm, setDeleteConfirm] = useState<BannerItem | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
         if (flash?.error) toast.error(flash.error);
@@ -79,7 +80,7 @@ export default function BannerIndex({ banners }: Props) {
                         element: '#tour-banner-table',
                         popover: {
                             title: 'Daftar Banner',
-                            description: 'Kelola banner di sini. Klik edit untuk mengubah, atau hapus untuk menghapus banner.',
+                            description: 'Kelola banner di sini. Klik gambar untuk preview, edit untuk mengubah, atau hapus untuk menghapus.',
                             side: 'top',
                             align: 'start',
                         },
@@ -123,6 +124,9 @@ export default function BannerIndex({ banners }: Props) {
             },
         });
     };
+
+    const truncate = (str: string, max: number) =>
+        str.length > max ? str.substring(0, max) + '...' : str;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -177,7 +181,8 @@ export default function BannerIndex({ banners }: Props) {
                                                         <img
                                                             src={banner.image_url}
                                                             alt={banner.title}
-                                                            className="h-14 w-20 rounded object-cover"
+                                                            className="h-14 w-20 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
+                                                            onClick={() => setPreviewImage(banner.image_url)}
                                                         />
                                                     ) : (
                                                         <div className="flex h-14 w-20 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
@@ -185,8 +190,8 @@ export default function BannerIndex({ banners }: Props) {
                                                         </div>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="font-medium">
-                                                    {banner.title}
+                                                <TableCell className="font-medium max-w-40 truncate" title={banner.title}>
+                                                    {truncate(banner.title, 25)}
                                                 </TableCell>
                                                 <TableCell className="max-w-48 truncate text-sm text-muted-foreground">
                                                     {banner.description ?? '-'}
@@ -213,6 +218,11 @@ export default function BannerIndex({ banners }: Props) {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-1">
+                                                        <Link href={`/banner/${banner.id}`}>
+                                                            <Button variant="ghost" size="icon" title="Lihat">
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
                                                         <Link href={`/banner/${banner.id}/edit`}>
                                                             <Button variant="ghost" size="icon" title="Edit">
                                                                 <Edit className="h-4 w-4" />
@@ -238,6 +248,24 @@ export default function BannerIndex({ banners }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Image Preview Modal */}
+            <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+                <DialogContent className="max-w-3xl p-0 overflow-hidden">
+                    <DialogHeader className="px-6 pt-6 pb-2">
+                        <DialogTitle>Preview Gambar</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center px-6 pb-6">
+                        {previewImage && (
+                            <img
+                                src={previewImage}
+                                alt="Preview"
+                                className="max-h-[75vh] max-w-full rounded-lg object-contain"
+                            />
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Delete Confirmation */}
             <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
