@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
     private function adminData(string $bulanYM, string $startOfMonth, string $endDate): JsonResponse
     {
-        $totalDealers = M_Dealer::where('jenis_dealer', 'like', '%H1%')->count();
+        $totalDealers = M_Dealer::where('jenis_dealer', 'like', '%H1%')->where('dealer_active', true)->count();
 
         $totalFlp = Flp::where('is_active', true)->count();
 
@@ -72,6 +72,7 @@ class DashboardController extends Controller
 
         $dealerPerformance = M_Dealer::select('kd_dealer_md', 'nm_alias_dealer', 'nm_alias_dealer_2')
             ->where('jenis_dealer', 'like', '%H1%')
+            ->where('dealer_active', true)
             ->get()
             ->map(function ($d) use ($bulanYM, $startOfMonth, $endDate) {
                 $target = (int) DB::connection('pgsql_sales')

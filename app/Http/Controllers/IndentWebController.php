@@ -16,7 +16,8 @@ class IndentWebController extends Controller
         $user = Auth::user();
 
         $dealerQuery = M_Dealer::select('kd_dealer_md', 'nm_alias_dealer')
-            ->where('jenis_dealer', 'like', '%H1%');
+            ->where('jenis_dealer', 'like', '%H1%')
+            ->where('dealer_active', true);
         if ($user->isKacab()) {
             $dealerQuery->where('kd_dealer_md', $user->fk_dealer);
         }
