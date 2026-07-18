@@ -38,6 +38,7 @@ interface StockItem {
 }
 
 interface StockGroup {
+    kode_type: string;
     tipe: string;
     categori: string;
     total: number;
@@ -204,7 +205,7 @@ export default function Index() {
                                                             <TableCell>
                                                                 <div className="flex items-center gap-2">
                                                                     <Package className="text-muted-foreground h-4 w-4 shrink-0" />
-                                                                    <span className="font-medium">{group.tipe}</span>
+                                                                    <span className="font-medium">{group.kode_type} - {group.tipe}</span>
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell className="text-center">

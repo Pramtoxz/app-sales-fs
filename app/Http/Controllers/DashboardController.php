@@ -181,11 +181,11 @@ class DashboardController extends Controller
 
         $stockData = DB::connection('pgsql_sales')
             ->select('
-                SELECT mgm."DeskripsiType" as tipe, mgm."Categori" as categori, COUNT(*) AS jumlah
+                SELECT mgm."KodeType" as kode_type, mgm."DeskripsiType" as tipe, mgm."Categori" as categori, COUNT(*) AS jumlah
                 FROM "H1_DOS"."stokunit" AS su
                 JOIN "H1_DOS"."mastergroupsegmenmotor" AS mgm ON SUBSTRING(su.fk_item FROM 1 FOR 3) = mgm."KodeType"
                 WHERE su.status_sale = \'RFS\' AND su.fk_dealer = ?
-                GROUP BY mgm."DeskripsiType", mgm."Categori"
+                GROUP BY mgm."KodeType", mgm."DeskripsiType", mgm."Categori"
                 ORDER BY CASE mgm."Categori" WHEN \'CUB\' THEN 1 WHEN \'AT\' THEN 2 WHEN \'SPORT\' THEN 3 WHEN \'EV\' THEN 4 ELSE 5 END, mgm."DeskripsiType"
             ', [$kodeDealer]);
 

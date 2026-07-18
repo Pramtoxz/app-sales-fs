@@ -66,6 +66,7 @@ interface FlpPerf {
 }
 
 interface StockItem {
+    kode_type: string;
     tipe: string;
     categori: string;
     jumlah: number;
@@ -107,19 +108,22 @@ function StatCard({
     color: string;
     badge?: { text: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' };
 }) {
+    const valueStr = String(value);
+    const valueSize = valueStr.length > 8 ? 'text-lg' : valueStr.length > 5 ? 'text-xl' : 'text-2xl';
+
     return (
         <Card className="relative overflow-hidden">
             <CardContent className="p-4">
                 <div className="flex items-start justify-between">
-                    <div className="space-y-1">
+                    <div className="min-w-0 flex-1 space-y-1">
                         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</p>
-                        <div className="flex items-center gap-2">
-                            <p className="text-2xl font-bold tabular-nums">{value}</p>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <p className={`${valueSize} font-bold tabular-nums`}>{value}</p>
                             {badge && <Badge variant={badge.variant} className="text-[10px]">{badge.text}</Badge>}
                         </div>
                         {sub && <p className="text-muted-foreground text-xs">{sub}</p>}
                     </div>
-                    <div className={`rounded-lg p-2 ${color}`}>
+                    <div className={`shrink-0 rounded-lg p-2 ${color}`}>
                         <Icon className="h-4 w-4 text-white" />
                     </div>
                 </div>
@@ -273,7 +277,8 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
         .filter((d) => d.target > 0 || d.terjual > 0)
         .slice(0, 10)
         .map((d) => ({
-            nama: truncate(d.dealer, 12),
+            nama: d.kode_dealer,
+            dealer: d.dealer,
             Target: d.target,
             Terjual: d.terjual,
         }));
@@ -291,13 +296,17 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                 <CardContent>
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={320}>
-                            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 50 }}>
+                            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis dataKey="nama" tick={{ fontSize: 10 }} angle={-35} textAnchor="end" interval={0} height={60} />
+                                <XAxis dataKey="nama" tick={{ fontSize: 11 }} />
                                 <YAxis tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
                                     formatter={(value: number) => value.toLocaleString('id-ID')}
+                                    labelFormatter={(_, payload) => {
+                                        const d = payload?.[0]?.payload;
+                                        return d?.dealer ? `${d.nama} - ${d.dealer}` : d?.nama ?? '';
+                                    }}
                                 />
                                 <Legend wrapperStyle={{ fontSize: 12 }} />
                                 <Bar dataKey="Target" fill="#94a3b8" radius={[4, 4, 0, 0]} />
@@ -332,7 +341,10 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between">
-                                            <p className="truncate text-sm font-medium">{d.dealer}</p>
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium">{d.kode_dealer}</p>
+                                                <p className="text-muted-foreground truncate text-[10px]">{d.dealer}</p>
+                                            </div>
                                             <span className="text-muted-foreground ml-2 shrink-0 text-xs tabular-nums">
                                                 {d.target > 0 ? `${d.terjual}/${d.target}` : `${d.terjual} unit`}
                                             </span>
@@ -383,12 +395,13 @@ function KacabCharts({ data }: { data: DashboardData }) {
     const stockChart = stockData
         .slice(0, 12)
         .map((s) => ({
-            tipe: truncate(s.tipe, 18),
+            kode: s.kode_type,
+            tipe: s.tipe,
             jumlah: Number(s.jumlah),
         }));
 
     const flpHeight = Math.max(240, flpChartData.length * 44);
-    const stockHeight = Math.max(240, stockChart.length * 36);
+    const stockHeight = Math.max(240, stockChart.length * 30);
 
     return (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -440,11 +453,14 @@ function KacabCharts({ data }: { data: DashboardData }) {
                             <BarChart data={stockChart} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                                <YAxis type="category" dataKey="tipe" width={130} tick={{ fontSize: 10 }} />
+                                <YAxis type="category" dataKey="kode" width={50} tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
                                     formatter={(value: number) => [`${value} unit`, 'Jumlah']}
-                                    labelFormatter={(label) => label}
+                                    labelFormatter={(_, payload) => {
+                                        const d = payload?.[0]?.payload;
+                                        return d?.tipe ? `${d.kode} - ${d.tipe}` : d?.kode ?? '';
+                                    }}
                                 />
                                 <Bar dataKey="jumlah" radius={[0, 4, 4, 0]} barSize={18}>
                                     {stockChart.map((_, i) => (
