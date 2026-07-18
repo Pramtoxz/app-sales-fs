@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Exports\TargetDealerExport;
 use App\Exports\TargetDealerTemplateExport;
 use App\Imports\TargetDealerImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -321,5 +322,45 @@ class TargetController extends Controller
         }
 
         return Excel::download(new TargetDealerTemplateExport(), 'template_target_dealer.xlsx');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->isMd() && !$user->isIt()) {
+            abort(403);
+        }
+
+        $bulanTahun = $request->input('bulan_tahun', Carbon::now()->format('Y-m'));
+        $bulanTahunNorm = BulanTahunHelper::normalize($bulanTahun);
+
+        $rows = DB::connection('pgsql_sales')
+            ->table('H1_DOS.tbl_target_flp as t')
+            ->leftJoin('public.flp as f', 't.id_flp', '=', 'f.id_flp')
+            ->select([
+                't.fk_dealer',
+                't.id_flp',
+                'f.nama as nama_flp',
+                't.series',
+                't.bulan_tahun',
+                't.target',
+            ])
+            ->where('t.bulan_tahun', $bulanTahunNorm)
+            ->orderBy('t.fk_dealer')
+            ->orderBy('f.nama')
+            ->orderBy('t.series')
+            ->get()
+            ->map(fn($r) => [
+                $r->fk_dealer,
+                $r->id_flp,
+                $r->nama_flp ?? '-',
+                $r->series,
+                $r->bulan_tahun,
+                (int) $r->target,
+            ]);
+
+        $filename = 'target_flp_' . $bulanTahunNorm . '.xlsx';
+
+        return Excel::download(new TargetDealerExport($rows), $filename);
     }
 }

@@ -54,12 +54,16 @@ class MasterController extends Controller
         }
 
         $data = DB::connection('pgsql_sales')->select("
-            SELECT DISTINCT mgm.\"KodeType\" as kode_type, mgm.\"DeskripsiType\" as nama_tipe, mgm.\"Categori\" as categori
+            SELECT DISTINCT
+                mgm.\"KodeType\" as kode_type,
+                mgm.\"DeskripsiType\" as nama_tipe,
+                mgm.\"Categori\" as categori,
+                CASE mgm.\"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END as sort_order
             FROM \"H1_DOS\".\"mastergroupsegmenmotor\" mgm
             JOIN \"H1_DOS\".\"stokunit\" su ON SUBSTRING(su.fk_item FROM 1 FOR 3) = mgm.\"KodeType\"
             WHERE su.fk_dealer = ?
               AND su.status_sale = 'RFS'
-            ORDER BY CASE mgm.\"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END, mgm.\"DeskripsiType\"
+            ORDER BY sort_order, mgm.\"DeskripsiType\"
         ", [$flp->kode_dealer]);
 
         return response()->json(['success' => true, 'data' => $data]);

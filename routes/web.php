@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('target-dealer/data', [TargetController::class, 'getData'])->name('target-dealer.data');
         Route::post('target-dealer/upload', [TargetController::class, 'uploadExcel'])->name('target-dealer.upload');
         Route::get('target-dealer/template', [TargetController::class, 'downloadTemplate'])->name('target-dealer.template');
+        Route::get('target-dealer/export', [TargetController::class, 'exportExcel'])->name('target-dealer.export');
         Route::get('target-dealer/{kode_dealer}', [TargetController::class, 'show'])->name('target-dealer.show');
         Route::get('target-dealer/{kode_dealer}/data', [TargetController::class, 'getShowData'])->name('target-dealer.show-data');
         Route::get('target-dealer/{kode_dealer}/series', [TargetController::class, 'getSeriesList'])->name('target-dealer.series');

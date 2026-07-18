@@ -53,6 +53,7 @@ export default function Index() {
     const [dealers, setDealers] = useState<DealerData[]>([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [exporting, setExporting] = useState(false);
     const [fileName, setFileName] = useState('');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
@@ -137,6 +138,15 @@ export default function Index() {
 
     const handleDownloadTemplate = () => {
         window.location.href = '/target-dealer/template';
+    };
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            window.location.href = `/target-dealer/export?bulan_tahun=${encodeURIComponent(bulanTahun)}`;
+        } finally {
+            setTimeout(() => setExporting(false), 2000);
+        }
     };
 
     return (
@@ -230,6 +240,14 @@ export default function Index() {
                                     <Button size="sm" variant="outline" onClick={handleDownloadTemplate}>
                                         <Download className="mr-1 h-4 w-4" />
                                         Template
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting}>
+                                        {exporting ? (
+                                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Download className="mr-1 h-4 w-4" />
+                                        )}
+                                        Export Excel
                                     </Button>
                                 </div>
                             </div>
