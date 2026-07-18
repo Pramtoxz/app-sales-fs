@@ -31,6 +31,16 @@ class BannerController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $user = Auth::user();
+        if (!$user->isIt() && !$user->isMd()) {
+            abort(403);
+        }
+
+        return Inertia::render('banner/Create');
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -56,7 +66,7 @@ class BannerController extends Controller
                 $imagePath = $file->storeAs('photos/banners', $filename, 'public');
             }
 
-            $banner = Banner::create([
+            Banner::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'image_path' => $imagePath,
@@ -66,15 +76,25 @@ class BannerController extends Controller
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
-            $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
-
-            return response()->json(['success' => true, 'banner' => $banner]);
+            return redirect()->route('banner.index')->with('success', 'Banner berhasil ditambahkan');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan: ' . $e->getMessage(),
-            ], 500);
+            return back()->withErrors(['title' => 'Gagal menyimpan: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    public function edit(int $id): Response
+    {
+        $user = Auth::user();
+        if (!$user->isIt() && !$user->isMd()) {
+            abort(403);
+        }
+
+        $banner = Banner::findOrFail($id);
+        $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
+
+        return Inertia::render('banner/Edit', [
+            'banner' => $banner,
+        ]);
     }
 
     public function update(Request $request, int $id)
@@ -86,7 +106,7 @@ class BannerController extends Controller
 
         $banner = Banner::find($id);
         if (!$banner) {
-            return response()->json(['success' => false, 'message' => 'Banner tidak ditemukan'], 404);
+            return back()->withErrors(['title' => 'Banner tidak ditemukan']);
         }
 
         $request->validate([
@@ -110,7 +130,6 @@ class BannerController extends Controller
             ];
 
             if ($request->hasFile('image')) {
-                // Delete old image
                 if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
                     Storage::disk('public')->delete($banner->image_path);
                 }
@@ -121,14 +140,10 @@ class BannerController extends Controller
             }
 
             $banner->update($data);
-            $banner->image_url = $banner->image_path ? url('storage/' . $banner->image_path) : null;
 
-            return response()->json(['success' => true, 'banner' => $banner]);
+            return redirect()->route('banner.index')->with('success', 'Banner berhasil diperbarui');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate: ' . $e->getMessage(),
-            ], 500);
+            return back()->withErrors(['title' => 'Gagal mengupdate: ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -141,23 +156,19 @@ class BannerController extends Controller
 
         $banner = Banner::find($id);
         if (!$banner) {
-            return response()->json(['success' => false, 'message' => 'Banner tidak ditemukan'], 404);
+            return back()->with('error', 'Banner tidak ditemukan');
         }
 
         try {
-            // Delete image file
             if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
                 Storage::disk('public')->delete($banner->image_path);
             }
 
             $banner->delete();
 
-            return response()->json(['success' => true]);
+            return back()->with('success', 'Banner berhasil dihapus');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus: ' . $e->getMessage(),
-            ], 500);
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 }
