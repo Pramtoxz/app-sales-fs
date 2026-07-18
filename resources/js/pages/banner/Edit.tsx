@@ -44,9 +44,12 @@ export default function Edit({ banner }: Props) {
         is_active: banner.is_active,
     });
 
+    const truncate = (str: string, max: number) =>
+        str.length > max ? str.substring(0, max) + '...' : str;
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Banner', href: '/banner' },
-        { title: `Edit: ${banner.title}`, href: '#' },
+        { title: truncate(banner.title, 20), href: '#' },
     ];
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +57,7 @@ export default function Edit({ banner }: Props) {
         if (!file) return;
 
         try {
-            const compressed = await compressImage(file, 1.9, 1920);
+            const compressed = await compressImage(file, 4.5, 1920);
             if (compressed.size < file.size) {
                 toast.success(`Gambar dikompres: ${formatFileSize(file.size)} → ${formatFileSize(compressed.size)}`);
             }
@@ -104,7 +107,7 @@ export default function Edit({ banner }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit Banner - ${banner.title}`} />
+            <Head title="Edit Banner" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center gap-3">
@@ -115,7 +118,7 @@ export default function Edit({ banner }: Props) {
                     </Link>
                     <div>
                         <h1 className="text-lg font-semibold">Edit Banner</h1>
-                        <p className="text-muted-foreground text-sm">{banner.title}</p>
+                        <p className="text-muted-foreground text-sm max-w-md truncate" title={banner.title}>{truncate(banner.title, 50)}</p>
                     </div>
                 </div>
 

@@ -66,7 +66,7 @@ class BannerController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp',
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'sort_order' => 'nullable|integer|min:0',
@@ -127,7 +127,7 @@ class BannerController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'sort_order' => 'nullable|integer|min:0',

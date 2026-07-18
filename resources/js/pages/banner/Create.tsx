@@ -39,7 +39,7 @@ export default function Create() {
         if (!file) return;
 
         try {
-            const compressed = await compressImage(file, 1.9, 1920);
+            const compressed = await compressImage(file, 4.5, 1920);
             if (compressed.size < file.size) {
                 toast.success(`Gambar dikompres: ${formatFileSize(file.size)} → ${formatFileSize(compressed.size)}`);
             }
