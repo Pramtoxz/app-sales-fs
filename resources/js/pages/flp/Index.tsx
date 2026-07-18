@@ -39,7 +39,7 @@ interface FlpItem {
 
 interface Dealer {
     kd_dealer_md: string;
-    nm_dealer: string;
+    nm_alias_dealer: string;
 }
 
 export default function Index() {
@@ -126,7 +126,7 @@ export default function Index() {
                                                 key={d.kd_dealer_md}
                                                 value={d.kd_dealer_md}
                                             >
-                                                {d.nm_dealer} ({d.kd_dealer_md})
+                                                {d.kd_dealer_md} - {d.nm_alias_dealer}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

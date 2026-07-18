@@ -17,11 +17,12 @@ class PerformanceWebController extends Controller
     {
         $user = Auth::user();
 
-        $dealerQuery = M_Dealer::select('kd_dealer_md', 'nm_dealer');
+        $dealerQuery = M_Dealer::select('kd_dealer_md', 'nm_alias_dealer')
+            ->where('jenis_dealer', 'like', '%H1%');
         if ($user->isKacab()) {
             $dealerQuery->where('kd_dealer_md', $user->fk_dealer);
         }
-        $dealers = $dealerQuery->orderBy('nm_dealer')->get();
+        $dealers = $dealerQuery->orderBy('nm_alias_dealer')->get();
 
         return Inertia::render('performance/Index', [
             'dealers' => $dealers,

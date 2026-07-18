@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
     private function adminData(string $bulanYM, string $startOfMonth, string $endDate): JsonResponse
     {
-        $totalDealers = M_Dealer::count();
+        $totalDealers = M_Dealer::where('jenis_dealer', 'like', '%H1%')->count();
 
         $totalFlp = Flp::where('is_active', true)->count();
 
@@ -70,7 +70,8 @@ class DashboardController extends Controller
             ->where('Status_guestbook', 't')
             ->count();
 
-        $dealerPerformance = M_Dealer::select('kd_dealer_md', 'nm_dealer')
+        $dealerPerformance = M_Dealer::select('kd_dealer_md', 'nm_alias_dealer', 'nm_alias_dealer_2')
+            ->where('jenis_dealer', 'like', '%H1%')
             ->get()
             ->map(function ($d) use ($bulanYM, $startOfMonth, $endDate) {
                 $target = (int) DB::connection('pgsql_sales')
@@ -87,9 +88,14 @@ class DashboardController extends Controller
                     ->where('fp.fk_dealer', $d->kd_dealer_md)
                     ->count();
 
+                $namaBersih = $d->nm_alias_dealer_2 && strlen($d->nm_alias_dealer_2) > 4
+                    ? substr($d->nm_alias_dealer_2, 4)
+                    : ($d->nm_alias_dealer_2 ?? $d->kd_dealer_md);
+
                 return [
-                    'dealer' => $d->nm_dealer,
+                    'dealer' => $namaBersih,
                     'kode_dealer' => $d->kd_dealer_md,
+                    'alias' => $d->nm_alias_dealer,
                     'target' => $target,
                     'terjual' => $terjual,
                     'persentase' => $target > 0 ? round(($terjual / $target) * 100, 1) : 0,
@@ -121,7 +127,8 @@ class DashboardController extends Controller
     private function kacabData($user, string $bulanYM, string $startOfMonth, string $endDate): JsonResponse
     {
         $kodeDealer = $user->fk_dealer;
-        $nmDealer = M_Dealer::where('kd_dealer_md', $kodeDealer)->value('nm_dealer') ?? $kodeDealer;
+        $nmDealerRaw = M_Dealer::where('kd_dealer_md', $kodeDealer)->value('nm_alias_dealer_2') ?? $kodeDealer;
+        $nmDealer = $nmDealerRaw && strlen($nmDealerRaw) > 4 ? substr($nmDealerRaw, 4) : $nmDealerRaw;
 
         $totalFlp = Flp::where('kode_dealer', $kodeDealer)->where('is_active', true)->count();
 

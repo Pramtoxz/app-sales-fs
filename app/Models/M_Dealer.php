@@ -14,7 +14,21 @@ class M_Dealer extends Model
     protected $fillable = [
         'kd_dealer_md',
         'kd_dealer_ahm',
-        'nm_dealer',
+        'jenis_dealer',
+        'nm_alias_dealer',
+        'nm_alias_dealer_2',
         'alamat',
+        'dealer_active'
     ];
+
+    protected $casts = [
+        'dealer_active' => 'boolean',
+    ];
+
+    public function getNamaBersihAttribute(): ?string
+    {
+        $nama = $this->nm_alias_dealer_2;
+        if (!$nama) return null;
+        return strlen($nama) > 4 ? substr($nama, 4) : $nama;
+    }
 }

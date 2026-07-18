@@ -1,42 +1,60 @@
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import {
-    Users,
-    Target,
-    ShoppingCart,
-    TrendingUp,
-    MessageSquare,
-    Handshake,
-    Package,
-    Trophy,
     BarChart3,
+    Handshake,
     Loader2,
+    MessageSquare,
+    Package,
+    ShoppingCart,
+    Target,
+    TrendingUp,
+    Trophy,
+    Users,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    BarChart,
     Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-    Cell,
 } from 'recharts';
+import { toast } from 'sonner';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+];
 
 const DISTINCT_COLORS = [
-    '#2563eb', '#16a34a', '#dc2626', '#f59e0b', '#7c3aed',
-    '#0891b2', '#db2777', '#ea580c', '#4f46e5', '#059669',
-    '#be185d', '#0d9488', '#6d28d9', '#ca8a04', '#e11d48',
-    '#0284c7', '#9333ea', '#b45309', '#047857', '#7e22ce',
+    '#2563eb',
+    '#16a34a',
+    '#dc2626',
+    '#f59e0b',
+    '#7c3aed',
+    '#0891b2',
+    '#db2777',
+    '#ea580c',
+    '#4f46e5',
+    '#059669',
+    '#be185d',
+    '#0d9488',
+    '#6d28d9',
+    '#ca8a04',
+    '#e11d48',
+    '#0284c7',
+    '#9333ea',
+    '#b45309',
+    '#047857',
+    '#7e22ce',
 ];
 
 interface Stats {
@@ -52,6 +70,7 @@ interface Stats {
 interface DealerPerf {
     dealer: string;
     kode_dealer: string;
+    alias: string;
     target: number;
     terjual: number;
     persentase: number;
@@ -106,22 +125,47 @@ function StatCard({
     value: string | number;
     sub?: React.ReactNode;
     color: string;
-    badge?: { text: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' };
+    badge?: {
+        text: string;
+        variant: 'default' | 'destructive' | 'outline' | 'secondary';
+    };
 }) {
     const valueStr = String(value);
-    const valueSize = valueStr.length > 8 ? 'text-lg' : valueStr.length > 5 ? 'text-xl' : 'text-2xl';
+    const valueSize =
+        valueStr.length > 8
+            ? 'text-lg'
+            : valueStr.length > 5
+              ? 'text-xl'
+              : 'text-2xl';
 
     return (
         <Card className="relative overflow-hidden">
             <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1 space-y-1">
-                        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</p>
+                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                            {label}
+                        </p>
                         <div className="flex flex-wrap items-center gap-1.5">
-                            <p className={`${valueSize} font-bold tabular-nums`}>{value}</p>
-                            {badge && <Badge variant={badge.variant} className="text-[10px]">{badge.text}</Badge>}
+                            <p
+                                className={`${valueSize} font-bold tabular-nums`}
+                            >
+                                {value}
+                            </p>
+                            {badge && (
+                                <Badge
+                                    variant={badge.variant}
+                                    className="text-[10px]"
+                                >
+                                    {badge.text}
+                                </Badge>
+                            )}
                         </div>
-                        {sub && <p className="text-muted-foreground text-xs">{sub}</p>}
+                        {sub && (
+                            <p className="text-xs text-muted-foreground">
+                                {sub}
+                            </p>
+                        )}
                     </div>
                     <div className={`shrink-0 rounded-lg p-2 ${color}`}>
                         <Icon className="h-4 w-4 text-white" />
@@ -144,7 +188,10 @@ export default function Dashboard({ isKacab }: Props) {
         setLoading(true);
         try {
             const res = await fetch(`/dashboard/data?bulan_tahun=${bulan}`, {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
                 credentials: 'same-origin',
             });
             const json = await res.json();
@@ -166,7 +213,10 @@ export default function Dashboard({ isKacab }: Props) {
 
     const bulanLabel = useMemo(() => {
         try {
-            return new Date(bulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            return new Date(bulan + '-01').toLocaleDateString('id-ID', {
+                month: 'long',
+                year: 'numeric',
+            });
         } catch {
             return bulan;
         }
@@ -177,7 +227,7 @@ export default function Dashboard({ isKacab }: Props) {
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Dashboard" />
                 <div className="flex h-[60vh] items-center justify-center">
-                    <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
             </AppLayout>
         );
@@ -193,17 +243,34 @@ export default function Dashboard({ isKacab }: Props) {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            {isKacab && data.dealer_name ? data.dealer_name : 'Seluruh Dealer'}
+                            {isKacab && data.dealer_name
+                                ? data.dealer_name
+                                : 'Seluruh Dealer'}
                         </h1>
-                        <p className="text-muted-foreground text-sm">
-                            {isKacab ? 'Performa dealer dan tim FLP Anda' : 'Ringkasan performa seluruh dealer'}
+                        <p className="text-sm text-muted-foreground">
+                            {isKacab
+                                ? 'Performa dealer dan tim FLP Anda'
+                                : 'Ringkasan performa seluruh dealer'}
                         </p>
                     </div>
-                    <Input type="month" value={bulan} onChange={(e) => setBulan(e.target.value)} className="w-40" />
+                    <Input
+                        type="month"
+                        value={bulan}
+                        onChange={(e) => setBulan(e.target.value)}
+                        className="w-40"
+                    />
                 </div>
 
-                {isKacab ? <KacabStats stats={stats} /> : <AdminStats stats={stats} bulanLabel={bulanLabel} />}
-                {isKacab ? <KacabCharts data={data} /> : <AdminCharts data={data} bulanLabel={bulanLabel} />}
+                {isKacab ? (
+                    <KacabStats stats={stats} />
+                ) : (
+                    <AdminStats stats={stats} bulanLabel={bulanLabel} />
+                )}
+                {isKacab ? (
+                    <KacabCharts data={data} />
+                ) : (
+                    <AdminCharts data={data} bulanLabel={bulanLabel} />
+                )}
             </div>
         </AppLayout>
     );
@@ -212,32 +279,82 @@ export default function Dashboard({ isKacab }: Props) {
 function ProspekSub({ total, deal }: { total: number; deal: number }) {
     const rate = total > 0 ? ((deal / total) * 100).toFixed(1) : '0';
     return (
-        <span className="text-muted-foreground text-xs">
-            {deal} deal &middot; <span className="font-medium text-foreground">{rate}% konversi</span>
+        <span className="text-xs text-muted-foreground">
+            {deal} deal &middot;{' '}
+            <span className="font-medium text-foreground">
+                {rate}% konversi
+            </span>
         </span>
     );
 }
 
-function AdminStats({ stats, bulanLabel }: { stats: Stats; bulanLabel: string }) {
+function AdminStats({
+    stats,
+    bulanLabel,
+}: {
+    stats: Stats;
+    bulanLabel: string;
+}) {
     return (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <StatCard icon={Users} label="Total Dealer" value={stats.total_dealers ?? 0} color="bg-blue-600" />
-            <StatCard icon={Users} label="Total FLP" value={stats.total_flp} color="bg-violet-600" />
-            <StatCard icon={Target} label="Target" value={stats.total_target.toLocaleString('id-ID')} sub={bulanLabel} color="bg-amber-500" />
-            <StatCard icon={ShoppingCart} label="Terjual" value={stats.total_terjual.toLocaleString('id-ID')} sub={bulanLabel} color="bg-green-600" />
+            <StatCard
+                icon={Users}
+                label="Total Dealer"
+                value={stats.total_dealers ?? 0}
+                color="bg-blue-600"
+            />
+            <StatCard
+                icon={Users}
+                label="Total FLP"
+                value={stats.total_flp}
+                color="bg-violet-600"
+            />
+            <StatCard
+                icon={Target}
+                label="Target"
+                value={stats.total_target.toLocaleString('id-ID')}
+                sub={bulanLabel}
+                color="bg-amber-500"
+            />
+            <StatCard
+                icon={ShoppingCart}
+                label="Terjual"
+                value={stats.total_terjual.toLocaleString('id-ID')}
+                sub={bulanLabel}
+                color="bg-green-600"
+            />
             <StatCard
                 icon={TrendingUp}
                 label="Capai"
                 value={`${stats.persentase}%`}
-                sub={stats.total_target > 0 ? `${stats.total_terjual} dari ${stats.total_target} unit` : 'Belum ada target'}
-                color={stats.persentase >= 100 ? 'bg-green-600' : stats.persentase >= 50 ? 'bg-amber-500' : 'bg-red-500'}
-                badge={stats.persentase > 100 ? { text: 'Melebihi target', variant: 'outline' } : undefined}
+                sub={
+                    stats.total_target > 0
+                        ? `${stats.total_terjual} dari ${stats.total_target} unit`
+                        : 'Belum ada target'
+                }
+                color={
+                    stats.persentase >= 100
+                        ? 'bg-green-600'
+                        : stats.persentase >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                }
+                badge={
+                    stats.persentase > 100
+                        ? { text: 'Melebihi target', variant: 'outline' }
+                        : undefined
+                }
             />
             <StatCard
                 icon={MessageSquare}
                 label="Prospek"
                 value={stats.total_prospek.toLocaleString('id-ID')}
-                sub={<ProspekSub total={stats.total_prospek} deal={stats.deal_prospek ?? 0} />}
+                sub={
+                    <ProspekSub
+                        total={stats.total_prospek}
+                        deal={stats.deal_prospek ?? 0}
+                    />
+                }
                 color="bg-cyan-600"
             />
         </div>
@@ -247,29 +364,69 @@ function AdminStats({ stats, bulanLabel }: { stats: Stats; bulanLabel: string })
 function KacabStats({ stats }: { stats: Stats }) {
     return (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <StatCard icon={Users} label="FLP Aktif" value={stats.total_flp} color="bg-violet-600" />
-            <StatCard icon={Target} label="Target" value={stats.total_target.toLocaleString('id-ID')} color="bg-amber-500" />
-            <StatCard icon={ShoppingCart} label="Terjual" value={stats.total_terjual.toLocaleString('id-ID')} color="bg-green-600" />
+            <StatCard
+                icon={Users}
+                label="FLP Aktif"
+                value={stats.total_flp}
+                color="bg-violet-600"
+            />
+            <StatCard
+                icon={Target}
+                label="Target"
+                value={stats.total_target.toLocaleString('id-ID')}
+                color="bg-amber-500"
+            />
+            <StatCard
+                icon={ShoppingCart}
+                label="Terjual"
+                value={stats.total_terjual.toLocaleString('id-ID')}
+                color="bg-green-600"
+            />
             <StatCard
                 icon={TrendingUp}
                 label="Capai"
                 value={`${stats.persentase}%`}
-                sub={stats.total_target > 0 ? `${stats.total_terjual} dari ${stats.total_target} unit` : 'Belum ada target'}
-                color={stats.persentase >= 100 ? 'bg-green-600' : stats.persentase >= 50 ? 'bg-amber-500' : 'bg-red-500'}
-                badge={stats.persentase > 100 ? { text: 'Melebihi target', variant: 'outline' } : undefined}
+                sub={
+                    stats.total_target > 0
+                        ? `${stats.total_terjual} dari ${stats.total_target} unit`
+                        : 'Belum ada target'
+                }
+                color={
+                    stats.persentase >= 100
+                        ? 'bg-green-600'
+                        : stats.persentase >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                }
+                badge={
+                    stats.persentase > 100
+                        ? { text: 'Melebihi target', variant: 'outline' }
+                        : undefined
+                }
             />
             <StatCard
                 icon={Handshake}
                 label="Prospek"
                 value={stats.total_prospek.toLocaleString('id-ID')}
-                sub={<ProspekSub total={stats.total_prospek} deal={stats.deal_prospek ?? 0} />}
+                sub={
+                    <ProspekSub
+                        total={stats.total_prospek}
+                        deal={stats.deal_prospek ?? 0}
+                    />
+                }
                 color="bg-cyan-600"
             />
         </div>
     );
 }
 
-function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: string }) {
+function AdminCharts({
+    data,
+    bulanLabel,
+}: {
+    data: DashboardData;
+    bulanLabel: string;
+}) {
     const dealerPerf = data.dealer_performance ?? [];
     const topDealers = data.top_dealers ?? [];
 
@@ -277,7 +434,7 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
         .filter((d) => d.target > 0 || d.terjual > 0)
         .slice(0, 10)
         .map((d) => ({
-            nama: d.kode_dealer,
+            nama: `${d.kode_dealer} - ${d.alias}`,
             dealer: d.dealer,
             Target: d.target,
             Terjual: d.terjual,
@@ -288,33 +445,67 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
             <Card className="lg:col-span-2">
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
-                        <BarChart3 className="text-muted-foreground h-4 w-4" />
-                        <CardTitle className="text-sm font-semibold">Target vs Terjual per Dealer</CardTitle>
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-semibold">
+                            Target vs Actual Dealer
+                        </CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">{bulanLabel} &middot; Top 10 dealer</p>
+                    <p className="text-xs text-muted-foreground">
+                        {bulanLabel} &middot; Top 10 Dealer
+                    </p>
                 </CardHeader>
                 <CardContent>
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={320}>
-                            <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                            <BarChart
+                                data={chartData}
+                                margin={{
+                                    top: 5,
+                                    right: 5,
+                                    left: 0,
+                                    bottom: 20,
+                                }}
+                            >
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    className="opacity-30"
+                                />
                                 <XAxis dataKey="nama" tick={{ fontSize: 11 }} />
                                 <YAxis tick={{ fontSize: 11 }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                                    formatter={(value: number) => value.toLocaleString('id-ID')}
+                                    contentStyle={{
+                                        borderRadius: 8,
+                                        border: '1px solid hsl(var(--border))',
+                                        fontSize: 12,
+                                    }}
+                                    formatter={(value: number) =>
+                                        value.toLocaleString('id-ID')
+                                    }
                                     labelFormatter={(_, payload) => {
                                         const d = payload?.[0]?.payload;
-                                        return d?.dealer ? `${d.nama} - ${d.dealer}` : d?.nama ?? '';
+                                        return d?.dealer
+                                            ? `${d.nama} - ${d.dealer}`
+                                            : (d?.nama ?? '');
                                     }}
                                 />
                                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                                <Bar dataKey="Target" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="Terjual" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                                <Bar
+                                    dataKey="Target"
+                                    fill="#94a3b8"
+                                    radius={[4, 4, 0, 0]}
+                                />
+                                <Bar
+                                    dataKey="Terjual"
+                                    fill="#2563eb"
+                                    radius={[4, 4, 0, 0]}
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyState icon={BarChart3} message="Belum ada data dealer" />
+                        <EmptyState
+                            icon={BarChart3}
+                            message="Belum ada data dealer"
+                        />
                     )}
                 </CardContent>
             </Card>
@@ -323,18 +514,31 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-amber-500" />
-                        <CardTitle className="text-sm font-semibold">Top 5 Dealer</CardTitle>
+                        <CardTitle className="text-sm font-semibold">
+                            Top 5 Dealer
+                        </CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">Berdasarkan % pencapaian</p>
+                    <p className="text-xs text-muted-foreground">
+                        Berdasarkan % pencapaian
+                    </p>
                 </CardHeader>
                 <CardContent>
                     {topDealers.length > 0 ? (
                         <div className="space-y-3">
                             {topDealers.map((d, i) => (
-                                <div key={d.kode_dealer} className="flex items-center gap-3">
+                                <div
+                                    key={d.kode_dealer}
+                                    className="flex items-center gap-3"
+                                >
                                     <div
                                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                                            i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-gray-400' : i === 2 ? 'bg-amber-700' : 'bg-muted-foreground'
+                                            i === 0
+                                                ? 'bg-amber-500'
+                                                : i === 1
+                                                  ? 'bg-gray-400'
+                                                  : i === 2
+                                                    ? 'bg-amber-700'
+                                                    : 'bg-muted-foreground'
                                         }`}
                                     >
                                         {i + 1}
@@ -342,26 +546,44 @@ function AdminCharts({ data, bulanLabel }: { data: DashboardData; bulanLabel: st
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between">
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium">{d.kode_dealer}</p>
-                                                <p className="text-muted-foreground truncate text-[10px]">{d.dealer}</p>
+                                                <p className="truncate text-sm font-medium">
+                                                    {d.kode_dealer} - {d.alias}
+                                                </p>
+                                                <p className="truncate text-[10px] text-muted-foreground">
+                                                    {d.dealer}
+                                                </p>
                                             </div>
-                                            <span className="text-muted-foreground ml-2 shrink-0 text-xs tabular-nums">
-                                                {d.target > 0 ? `${d.terjual}/${d.target}` : `${d.terjual} unit`}
+                                            <span className="ml-2 shrink-0 text-xs text-muted-foreground tabular-nums">
+                                                {d.target > 0
+                                                    ? `${d.terjual}/${d.target}`
+                                                    : `${d.terjual} unit`}
                                             </span>
                                         </div>
                                         <div className="mt-1 flex items-center gap-2">
-                                            <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+                                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                                                 <div
                                                     className="h-full rounded-full transition-all"
                                                     style={{
                                                         width: `${Math.min(d.persentase, 100)}%`,
-                                                        backgroundColor: d.persentase >= 100 ? '#16a34a' : d.persentase >= 50 ? '#f59e0b' : '#ef4444',
+                                                        backgroundColor:
+                                                            d.persentase >= 100
+                                                                ? '#16a34a'
+                                                                : d.persentase >=
+                                                                    50
+                                                                  ? '#f59e0b'
+                                                                  : '#ef4444',
                                                     }}
                                                 />
                                             </div>
-                                            <span className={`w-12 text-right text-xs font-medium tabular-nums ${
-                                                d.persentase >= 100 ? 'text-green-600' : d.persentase >= 50 ? 'text-amber-600' : 'text-red-600'
-                                            }`}>
+                                            <span
+                                                className={`w-12 text-right text-xs font-medium tabular-nums ${
+                                                    d.persentase >= 100
+                                                        ? 'text-green-600'
+                                                        : d.persentase >= 50
+                                                          ? 'text-amber-600'
+                                                          : 'text-red-600'
+                                                }`}
+                                            >
                                                 {d.persentase}%
                                             </span>
                                         </div>
@@ -392,13 +614,11 @@ function KacabCharts({ data }: { data: DashboardData }) {
             persentase: Number(f.persentase),
         }));
 
-    const stockChart = stockData
-        .slice(0, 12)
-        .map((s) => ({
-            kode: s.kode_type,
-            tipe: s.tipe,
-            jumlah: Number(s.jumlah),
-        }));
+    const stockChart = stockData.slice(0, 12).map((s) => ({
+        kode: s.kode_type,
+        tipe: s.tipe,
+        jumlah: Number(s.jumlah),
+    }));
 
     const flpHeight = Math.max(240, flpChartData.length * 44);
     const stockHeight = Math.max(240, stockChart.length * 30);
@@ -408,27 +628,64 @@ function KacabCharts({ data }: { data: DashboardData }) {
             <Card>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
-                        <Users className="text-muted-foreground h-4 w-4" />
-                        <CardTitle className="text-sm font-semibold">Performa FLP</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-semibold">
+                            Performa FLP
+                        </CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                        Top {Math.min(flpPerf.length, 10)} dari {flpPerf.length} FLP &middot; Target vs terjual
+                    <p className="text-xs text-muted-foreground">
+                        Top {Math.min(flpPerf.length, 10)} dari {flpPerf.length}{' '}
+                        FLP &middot; Target vs terjual
                     </p>
                 </CardHeader>
                 <CardContent>
                     {flpChartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={flpHeight}>
-                            <BarChart data={flpChartData} layout="vertical" margin={{ top: 5, right: 50, left: 10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                            <BarChart
+                                data={flpChartData}
+                                layout="vertical"
+                                margin={{
+                                    top: 5,
+                                    right: 50,
+                                    left: 10,
+                                    bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    className="opacity-30"
+                                />
                                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                                <YAxis type="category" dataKey="nama" width={110} tick={{ fontSize: 11 }} />
+                                <YAxis
+                                    type="category"
+                                    dataKey="nama"
+                                    width={110}
+                                    tick={{ fontSize: 11 }}
+                                />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                                    formatter={(value: number, name: string) => [value.toLocaleString('id-ID'), name]}
+                                    contentStyle={{
+                                        borderRadius: 8,
+                                        border: '1px solid hsl(var(--border))',
+                                        fontSize: 12,
+                                    }}
+                                    formatter={(
+                                        value: number,
+                                        name: string,
+                                    ) => [value.toLocaleString('id-ID'), name]}
                                 />
                                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                                <Bar dataKey="Target" fill="#94a3b8" radius={[0, 4, 4, 0]} barSize={16} />
-                                <Bar dataKey="Terjual" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={16} />
+                                <Bar
+                                    dataKey="Target"
+                                    fill="#94a3b8"
+                                    radius={[0, 4, 4, 0]}
+                                    barSize={16}
+                                />
+                                <Bar
+                                    dataKey="Terjual"
+                                    fill="#2563eb"
+                                    radius={[0, 4, 4, 0]}
+                                    barSize={16}
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
@@ -440,37 +697,84 @@ function KacabCharts({ data }: { data: DashboardData }) {
             <Card>
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
-                        <Package className="text-muted-foreground h-4 w-4" />
-                        <CardTitle className="text-sm font-semibold">Stok Unit</CardTitle>
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-semibold">
+                            Stok Unit
+                        </CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                        {stockData.reduce((s, d) => s + Number(d.jumlah), 0)} unit RFS &middot; {stockData.length} tipe
+                    <p className="text-xs text-muted-foreground">
+                        {stockData.reduce((s, d) => s + Number(d.jumlah), 0)}{' '}
+                        unit RFS &middot; {stockData.length} tipe
                     </p>
                 </CardHeader>
                 <CardContent>
                     {stockChart.length > 0 ? (
                         <ResponsiveContainer width="100%" height={stockHeight}>
-                            <BarChart data={stockChart} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                                <YAxis type="category" dataKey="kode" width={50} tick={{ fontSize: 11 }} />
+                            <BarChart
+                                data={stockChart}
+                                layout="vertical"
+                                margin={{
+                                    top: 5,
+                                    right: 40,
+                                    left: 10,
+                                    bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    className="opacity-30"
+                                />
+                                <XAxis
+                                    type="number"
+                                    tick={{ fontSize: 11 }}
+                                    allowDecimals={false}
+                                />
+                                <YAxis
+                                    type="category"
+                                    dataKey="kode"
+                                    width={50}
+                                    tick={{ fontSize: 11 }}
+                                />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                                    formatter={(value: number) => [`${value} unit`, 'Jumlah']}
+                                    contentStyle={{
+                                        borderRadius: 8,
+                                        border: '1px solid hsl(var(--border))',
+                                        fontSize: 12,
+                                    }}
+                                    formatter={(value: number) => [
+                                        `${value} unit`,
+                                        'Jumlah',
+                                    ]}
                                     labelFormatter={(_, payload) => {
                                         const d = payload?.[0]?.payload;
-                                        return d?.tipe ? `${d.kode} - ${d.tipe}` : d?.kode ?? '';
+                                        return d?.tipe
+                                            ? `${d.kode} - ${d.tipe}`
+                                            : (d?.kode ?? '');
                                     }}
                                 />
-                                <Bar dataKey="jumlah" radius={[0, 4, 4, 0]} barSize={18}>
+                                <Bar
+                                    dataKey="jumlah"
+                                    radius={[0, 4, 4, 0]}
+                                    barSize={18}
+                                >
                                     {stockChart.map((_, i) => (
-                                        <Cell key={i} fill={DISTINCT_COLORS[i % DISTINCT_COLORS.length]} />
+                                        <Cell
+                                            key={i}
+                                            fill={
+                                                DISTINCT_COLORS[
+                                                    i % DISTINCT_COLORS.length
+                                                ]
+                                            }
+                                        />
                                     ))}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyState icon={Package} message="Belum ada data stok" />
+                        <EmptyState
+                            icon={Package}
+                            message="Belum ada data stok"
+                        />
                     )}
                 </CardContent>
             </Card>
@@ -478,7 +782,13 @@ function KacabCharts({ data }: { data: DashboardData }) {
     );
 }
 
-function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message: string }) {
+function EmptyState({
+    icon: Icon,
+    message,
+}: {
+    icon: React.ElementType;
+    message: string;
+}) {
     return (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Icon className="mb-2 h-8 w-8 opacity-40" />

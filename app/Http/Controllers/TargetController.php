@@ -42,8 +42,9 @@ class TargetController extends Controller
             abort(403);
         }
 
-        $nmDealer = M_Dealer::where('kd_dealer_md', $kode_dealer)
-            ->value('nm_dealer') ?? $kode_dealer;
+        $nmDealerRaw = M_Dealer::where('kd_dealer_md', $kode_dealer)
+            ->value('nm_alias_dealer_2') ?? $kode_dealer;
+        $nmDealer = $nmDealerRaw && strlen($nmDealerRaw) > 4 ? substr($nmDealerRaw, 4) : $nmDealerRaw;
 
         $seriesList = MTargetDealer::where('kode_dealer', $kode_dealer)
             ->where('bulan_tahun', Carbon::now()->format('Y-m'))
@@ -68,7 +69,8 @@ class TargetController extends Controller
             $bulanTahun = $request->input('bulan_tahun', Carbon::now()->format('Y-m'));
             $user = Auth::user();
 
-            $dealerQuery = M_Dealer::select('kd_dealer_md', 'nm_dealer');
+            $dealerQuery = M_Dealer::select('kd_dealer_md', 'nm_alias_dealer', 'nm_alias_dealer_2')
+                ->where('jenis_dealer', 'like', '%H1%');
             if ($user->isKacab()) {
                 $dealerQuery->where('kd_dealer_md', $user->fk_dealer);
             }
@@ -83,9 +85,13 @@ class TargetController extends Controller
 
             $data = $dealers->map(function ($dealer) use ($targets) {
                 $dealerTargets = $targets->get($dealer->kd_dealer_md, collect());
+                $namaBersih = $dealer->nm_alias_dealer_2 && strlen($dealer->nm_alias_dealer_2) > 4
+                    ? substr($dealer->nm_alias_dealer_2, 4)
+                    : ($dealer->nm_alias_dealer_2 ?? $dealer->kd_dealer_md);
                 return [
                     'kode_dealer' => $dealer->kd_dealer_md,
-                    'nm_dealer' => $dealer->nm_dealer,
+                    'nm_dealer' => $namaBersih,
+                    'alias' => $dealer->nm_alias_dealer,
                     'total_target' => $dealerTargets->sum('target'),
                     'detail' => $dealerTargets->map(function ($t) {
                         return [

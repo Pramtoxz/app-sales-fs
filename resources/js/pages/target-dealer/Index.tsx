@@ -32,6 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface DealerData {
     kode_dealer: string;
+    alias: string;
     nm_dealer: string;
     total_target: number;
     detail: { series: string; bulan_tahun: string; target: number }[];
@@ -69,6 +70,7 @@ export default function Index() {
             result = result.filter(
                 (d) =>
                     d.kode_dealer.toLowerCase().includes(q) ||
+                    d.alias.toLowerCase().includes(q) ||
                     d.nm_dealer.toLowerCase().includes(q),
             );
         }
