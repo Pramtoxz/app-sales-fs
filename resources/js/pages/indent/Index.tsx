@@ -3,6 +3,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { ClipboardList, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,6 +107,53 @@ export default function Index() {
         if (kodeDealer) loadData();
     }, [kodeDealer]);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_indent_tour');
+        if (!hasSeenTour) {
+            const steps: any[] = [
+                {
+                    element: '#tour-indent-dealer',
+                    popover: {
+                        title: 'Pilih Dealer',
+                        description: isKacab
+                            ? 'Dealer Anda sudah dipilih otomatis. Data indent akan langsung tampil.'
+                            : 'Pilih dealer dari dropdown lalu klik "Tampilkan" untuk melihat daftar indent (antrian) motor.',
+                        side: 'bottom',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#tour-indent-table',
+                    popover: {
+                        title: 'Daftar Indent',
+                        description: 'Klik pada tipe motor untuk melihat detail antrian per warna. Badge merah (R) menandakan revisi.',
+                        side: 'top',
+                        align: 'start',
+                    },
+                },
+            ];
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps,
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_indent_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-indent-dealer')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, []);
+
     const totalAll = data.reduce((sum, g) => sum + g.items.length, 0);
 
     return (
@@ -124,7 +173,7 @@ export default function Index() {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-end gap-3">
+                        <div id="tour-indent-dealer" className="flex items-end gap-3">
                             <div className="space-y-1">
                                 <Label className="text-xs">Dealer</Label>
                                 <Select
@@ -161,7 +210,7 @@ export default function Index() {
                             )}
                         </div>
 
-                        <div className="rounded-md border">
+                        <div id="tour-indent-table" className="rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

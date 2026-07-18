@@ -3,6 +3,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +87,53 @@ export default function Index() {
         if (kodeDealer) loadData();
     }, [kodeDealer]);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_flp_tour');
+        if (!hasSeenTour) {
+            const steps: any[] = [
+                {
+                    element: '#tour-flp-dealer',
+                    popover: {
+                        title: 'Pilih Dealer',
+                        description: isKacab
+                            ? 'Dealer Anda sudah dipilih otomatis. Data FLP akan langsung tampil.'
+                            : 'Pilih dealer dari dropdown lalu klik "Tampilkan" untuk melihat daftar FLP (Front Line People).',
+                        side: 'bottom',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#tour-flp-table',
+                    popover: {
+                        title: 'Daftar FLP',
+                        description: 'Daftar FLP beserta status (Aktif/Non-Aktif) dan foto profil. Klik untuk melihat detail.',
+                        side: 'top',
+                        align: 'start',
+                    },
+                },
+            ];
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps,
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_flp_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-flp-dealer')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, []);
+
     const handleDealerChange = (v: string) => {
         setKodeDealer(v);
         setData([]);
@@ -109,7 +158,7 @@ export default function Index() {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-end gap-3">
+                        <div id="tour-flp-dealer" className="flex items-end gap-3">
                             <div className="space-y-1">
                                 <Label className="text-xs">Dealer</Label>
                                 <Select
@@ -146,7 +195,7 @@ export default function Index() {
                             )}
                         </div>
 
-                        <div className="rounded-md border">
+                        <div id="tour-flp-table" className="rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

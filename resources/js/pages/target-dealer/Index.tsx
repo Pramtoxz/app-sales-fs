@@ -3,6 +3,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Download, FileSpreadsheet, Loader2, Search, Upload, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,6 +105,62 @@ export default function Index() {
         loadData();
     }, []);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_target_dealer_tour');
+        if (!hasSeenTour && dealers.length > 0) {
+            const steps: any[] = [
+                {
+                    element: '#tour-td-filter',
+                    popover: {
+                        title: 'Filter Periode',
+                        description: 'Pilih bulan untuk melihat target dealer pada periode tersebut.',
+                        side: 'bottom' as const,
+                        align: 'start' as const,
+                    },
+                },
+            ];
+            if (document.getElementById('tour-td-upload')) {
+                steps.push({
+                    element: '#tour-td-upload',
+                    popover: {
+                        title: 'Upload & Export',
+                        description: 'Upload target dealer dari Excel atau download template. Export data untuk Power BI.',
+                        side: 'bottom' as const,
+                        align: 'start' as const,
+                    },
+                });
+            }
+            steps.push({
+                element: '#tour-td-table',
+                popover: {
+                    title: 'Daftar Dealer',
+                    description: 'Klik "Detail" untuk melihat dan membagi target ke FLP per dealer.',
+                    side: 'top' as const,
+                    align: 'start' as const,
+                },
+            });
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps,
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_target_dealer_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-td-filter')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, [dealers]);
+
     const handleUpload = async () => {
         const file = fileRef.current?.files?.[0];
         if (!file) {
@@ -167,7 +225,7 @@ export default function Index() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {/* Filter */}
-                        <div className="flex items-end gap-3">
+                        <div id="tour-td-filter" className="flex items-end gap-3">
                             <div className="space-y-1">
                                 <Label htmlFor="bulan-tahun" className="text-xs">
                                     Periode
@@ -213,7 +271,7 @@ export default function Index() {
 
                         {/* Upload Excel — MD/IT only */}
                         {canUpload && (
-                            <div className="flex items-center gap-3 rounded-lg border border-dashed p-4">
+                            <div id="tour-td-upload" className="flex items-center gap-3 rounded-lg border border-dashed p-4">
                                 <FileSpreadsheet className="text-muted-foreground h-8 w-8 shrink-0" />
                                 <div className="flex-1 space-y-1">
                                     <input
@@ -256,7 +314,7 @@ export default function Index() {
                         )}
 
                         {/* Table */}
-                        <div className="rounded-md border">
+                        <div id="tour-td-table" className="rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

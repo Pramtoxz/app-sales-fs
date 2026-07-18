@@ -3,6 +3,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Loader2, Package, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -95,6 +97,53 @@ export default function Index() {
         if (kodeDealer) loadData();
     }, [kodeDealer]);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_stock_tour');
+        if (!hasSeenTour) {
+            const steps: any[] = [
+                {
+                    element: '#tour-stock-dealer',
+                    popover: {
+                        title: 'Filter Dealer & Pencarian',
+                        description: isKacab
+                            ? 'Dealer Anda sudah dipilih otomatis. Gunakan kolom pencarian untuk filter tipe atau warna.'
+                            : 'Pilih dealer dari dropdown, lalu gunakan kolom pencarian untuk filter tipe atau warna. Klik "Tampilkan" untuk memuat data.',
+                        side: 'bottom',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#tour-stock-table',
+                    popover: {
+                        title: 'Daftar Stok',
+                        description: 'Klik pada tipe motor untuk melihat detail stok per warna. Badge menunjukkan kategori (CUB, AT, SPORT, EV).',
+                        side: 'top',
+                        align: 'start',
+                    },
+                },
+            ];
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps,
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_stock_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-stock-dealer')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, []);
+
     const totalAll = useMemo(() => data.reduce((sum, g) => sum + g.total, 0), [data]);
 
     return (
@@ -114,7 +163,7 @@ export default function Index() {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-end gap-3 flex-wrap">
+                        <div id="tour-stock-dealer" className="flex items-end gap-3 flex-wrap">
                             <div className="space-y-1">
                                 <Label className="text-xs">Dealer</Label>
                                 <Select
@@ -168,7 +217,7 @@ export default function Index() {
                             )}
                         </div>
 
-                        <div className="rounded-md border">
+                        <div id="tour-stock-table" className="rounded-md border">
                             <Table>
                                 <TableHeader>
                                         <TableRow>

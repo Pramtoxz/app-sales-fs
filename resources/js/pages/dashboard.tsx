@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 import {
     BarChart3,
     Handshake,
@@ -211,6 +213,63 @@ export default function Dashboard({ isKacab }: Props) {
         loadData();
     }, [loadData]);
 
+    useEffect(() => {
+        let driverObj: ReturnType<typeof driver> | null = null;
+        const hasSeenTour = localStorage.getItem('has_seen_dashboard_tour');
+        if (!hasSeenTour && data) {
+            driverObj = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Next →',
+                prevBtnText: '← Previous',
+                doneBtnText: 'Got it!',
+                steps: [
+                    {
+                        element: '#tour-dashboard-period',
+                        popover: {
+                            title: 'Filter Periode',
+                            description: 'Pilih bulan untuk melihat data performa pada periode tersebut.',
+                            side: 'bottom',
+                            align: 'end',
+                        },
+                    },
+                    {
+                        element: '#tour-dashboard-stats',
+                        popover: {
+                            title: 'Ringkasan Statistik',
+                            description: isKacab
+                                ? 'Ringkasan performa dealer Anda: FLP aktif, target, penjualan, dan pencapaian.'
+                                : 'Ringkasan performa seluruh dealer: total dealer, FLP, target, penjualan, dan pencapaian.',
+                            side: 'bottom',
+                            align: 'start',
+                        },
+                    },
+                    {
+                        element: '#tour-dashboard-charts',
+                        popover: {
+                            title: 'Grafik Performa',
+                            description: isKacab
+                                ? 'Grafik performa FLP dan stok unit dealer Anda.'
+                                : 'Grafik perbandingan target vs penjualan per dealer dan top dealer.',
+                            side: 'top',
+                            align: 'start',
+                        },
+                    },
+                ],
+                onDestroyStarted: () => {
+                    localStorage.setItem('has_seen_dashboard_tour', 'true');
+                    driverObj?.destroy();
+                },
+            });
+            setTimeout(() => {
+                if (document.getElementById('tour-dashboard-period')) {
+                    driverObj?.drive();
+                }
+            }, 500);
+        }
+        return () => { driverObj?.destroy(); };
+    }, [data]);
+
     const bulanLabel = useMemo(() => {
         try {
             return new Date(bulan + '-01').toLocaleDateString('id-ID', {
@@ -254,6 +313,7 @@ export default function Dashboard({ isKacab }: Props) {
                         </p>
                     </div>
                     <Input
+                        id="tour-dashboard-period"
                         type="month"
                         value={bulan}
                         onChange={(e) => setBulan(e.target.value)}
@@ -261,16 +321,20 @@ export default function Dashboard({ isKacab }: Props) {
                     />
                 </div>
 
-                {isKacab ? (
-                    <KacabStats stats={stats} />
-                ) : (
-                    <AdminStats stats={stats} bulanLabel={bulanLabel} />
-                )}
-                {isKacab ? (
-                    <KacabCharts data={data} />
-                ) : (
-                    <AdminCharts data={data} bulanLabel={bulanLabel} />
-                )}
+                <div id="tour-dashboard-stats">
+                    {isKacab ? (
+                        <KacabStats stats={stats} />
+                    ) : (
+                        <AdminStats stats={stats} bulanLabel={bulanLabel} />
+                    )}
+                </div>
+                <div id="tour-dashboard-charts">
+                    {isKacab ? (
+                        <KacabCharts data={data} />
+                    ) : (
+                        <AdminCharts data={data} bulanLabel={bulanLabel} />
+                    )}
+                </div>
             </div>
         </AppLayout>
     );
