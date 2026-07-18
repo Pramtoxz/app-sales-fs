@@ -101,7 +101,7 @@ class IndentWebController extends Controller
                 'leasing' => $row->NamaLeasing,
                 'kode_item' => $row->kode_item,
                 'warna' => $row->warna,
-                'tgl_antrian' => $row->Tgl_Antrian,
+                'tgl_antrian' => $row->Tgl_Antrian ? \Carbon\Carbon::parse($row->Tgl_Antrian)->format('d-m-Y') : '-',
                 'umur_indent' => (int) $row->umur_indent,
                 'is_revisi' => $row->is_revisi,
                 'status' => $row->status,

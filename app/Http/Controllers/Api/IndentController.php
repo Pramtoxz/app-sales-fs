@@ -90,7 +90,7 @@ class IndentController extends Controller
                 'leasing'       => $row->NamaLeasing,
                 'kode_item'     => $row->kode_item,
                 'warna'         => $row->warna,
-                'tgl_antrian'   => $row->Tgl_Antrian,
+                'tgl_antrian'   => $row->Tgl_Antrian ? \Carbon\Carbon::parse($row->Tgl_Antrian)->format('d-m-Y') : '-',
                 'umur_indent'   => $row->umur_indent,
                 'is_mine'       => $row->is_mine,
                 'is_revisi'     => $row->is_revisi,
