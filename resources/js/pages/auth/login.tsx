@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Toaster } from '@/components/ui/sonner';
-import { usePage, router } from '@inertiajs/react';
+import { Spinner } from '@/components/ui/spinner';
+import { router, usePage } from '@inertiajs/react';
 import { LogIn } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -33,19 +33,24 @@ export default function Login() {
     }, [flash]);
 
     useEffect(() => {
-        if (!recaptchaSiteKey || document.getElementById('recaptcha-v2-script')) return;
+        if (!recaptchaSiteKey || document.getElementById('recaptcha-v2-script'))
+            return;
 
         window.recaptchaV2Callback = () => {
             if (recaptchaRef.current && !widgetIdRef.current) {
-                widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
-                    sitekey: recaptchaSiteKey,
-                });
+                widgetIdRef.current = window.grecaptcha.render(
+                    recaptchaRef.current,
+                    {
+                        sitekey: recaptchaSiteKey,
+                    },
+                );
             }
         };
 
         const script = document.createElement('script');
         script.id = 'recaptcha-v2-script';
-        script.src = 'https://www.google.com/recaptcha/api.js?onload=recaptchaV2Callback&render=explicit';
+        script.src =
+            'https://www.google.com/recaptcha/api.js?onload=recaptchaV2Callback&render=explicit';
         script.async = true;
         script.defer = true;
         document.head.appendChild(script);
@@ -62,27 +67,35 @@ export default function Login() {
         const password = formData.get('password') as string;
         const remember = formData.get('remember') === 'on';
 
-        const recaptchaResponse = window.grecaptcha?.getResponse(widgetIdRef.current ?? 0);
+        const recaptchaResponse = window.grecaptcha?.getResponse(
+            widgetIdRef.current ?? 0,
+        );
         if (!recaptchaResponse) {
-            setErrors({ email: 'Silakan centang "I\'m not a robot" terlebih dahulu.' });
+            setErrors({
+                email: 'Silakan centang "I\'m not a robot" terlebih dahulu.',
+            });
             setProcessing(false);
             return;
         }
 
-        router.post('/login', {
-            email,
-            password,
-            remember,
-            recaptcha_token: recaptchaResponse,
-        }, {
-            onFinish: () => {
-                setProcessing(false);
-                if (widgetIdRef.current !== null) {
-                    window.grecaptcha?.reset(widgetIdRef.current);
-                }
+        router.post(
+            '/login',
+            {
+                email,
+                password,
+                remember,
+                recaptcha_token: recaptchaResponse,
             },
-            onError: (errs) => setErrors(errs),
-        });
+            {
+                onFinish: () => {
+                    setProcessing(false);
+                    if (widgetIdRef.current !== null) {
+                        window.grecaptcha?.reset(widgetIdRef.current);
+                    }
+                },
+                onError: (errs) => setErrors(errs),
+            },
+        );
     };
 
     return (
@@ -93,12 +106,20 @@ export default function Login() {
                         <div className="space-y-4 text-center">
                             <div className="flex justify-center">
                                 <div className="rounded-2xl bg-white p-4 shadow-lg">
-                                    <img src={LogoMA} alt="Honda Logo" className="h-16 w-16" />
+                                    <img
+                                        src={LogoMA}
+                                        alt="Honda Logo"
+                                        className="h-16 w-16"
+                                    />
                                 </div>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">PT. Menara Agung</h1>
-                                <p className="mt-2 text-gray-600">Main Dealer Honda Sumatera Barat</p>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    PT. Menara Agung
+                                </h1>
+                                <p className="mt-2 text-gray-600">
+                                    Main Dealer Honda Sumatera Barat
+                                </p>
                             </div>
                         </div>
 
@@ -111,7 +132,12 @@ export default function Login() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="email" className="font-medium text-gray-700">Email</Label>
+                                    <Label
+                                        htmlFor="email"
+                                        className="font-medium text-gray-700"
+                                    >
+                                        Email
+                                    </Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -127,7 +153,12 @@ export default function Login() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="password" className="font-medium text-gray-700">Password</Label>
+                                    <Label
+                                        htmlFor="password"
+                                        className="font-medium text-gray-700"
+                                    >
+                                        Password
+                                    </Label>
                                     <Input
                                         id="password"
                                         type="password"
@@ -142,8 +173,15 @@ export default function Login() {
                                 </div>
 
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="remember" name="remember" tabIndex={3} />
-                                    <Label htmlFor="remember" className="cursor-pointer text-sm text-gray-600">
+                                    <Checkbox
+                                        id="remember"
+                                        name="remember"
+                                        tabIndex={3}
+                                    />
+                                    <Label
+                                        htmlFor="remember"
+                                        className="cursor-pointer text-sm text-gray-600"
+                                    >
                                         Ingat saya
                                     </Label>
                                 </div>
@@ -177,7 +215,7 @@ export default function Login() {
                         </form>
 
                         <div className="text-center text-sm text-gray-500">
-                            <p>© 2026 Honda. All rights reserved.</p>
+                            <p>© 2026, made with by Depart IT Menara-Agung</p>
                         </div>
                     </div>
                 </div>
