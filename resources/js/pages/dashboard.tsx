@@ -527,14 +527,14 @@ function AdminCharts({
                                     top: 5,
                                     right: 5,
                                     left: 0,
-                                    bottom: 20,
+                                    bottom: 50,
                                 }}
                             >
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     className="opacity-30"
                                 />
-                                <XAxis dataKey="nama" tick={{ fontSize: 11 }} />
+                                <XAxis dataKey="nama" tick={{ fontSize: 10 }} angle={-35} textAnchor="end" interval={0} height={60} />
                                 <YAxis tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     contentStyle={{
