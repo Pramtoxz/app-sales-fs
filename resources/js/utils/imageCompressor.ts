@@ -1,14 +1,14 @@
 /**
  * Compress image file if it exceeds the maximum size
  * @param file - The image file to compress
- * @param maxSizeMB - Maximum file size in MB (default: 1.9)
- * @param maxWidthOrHeight - Maximum width or height in pixels (default: 3840 for 4K)
+ * @param maxSizeMB - Maximum file size in MB (default: 4.5)
+ * @param maxWidthOrHeight - Maximum width or height in pixels (default: 1920)
  * @returns Compressed file or original if already small enough
  */
 export async function compressImage(
     file: File,
-    maxSizeMB: number = 1.9,
-    maxWidthOrHeight: number = 3840,
+    maxSizeMB: number = 4.5,
+    maxWidthOrHeight: number = 1920,
 ): Promise<File> {
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
