@@ -168,7 +168,6 @@ class SyncProspekDaily extends Command
         DB::connection('pgsql')
             ->table('prospek_daily_summary')
             ->whereNull('tanggal')
-            ->where('updated_at', '>=', $startOfMonth)
             ->delete();
 
         $dealerSummary = DB::connection('pgsql')
@@ -180,23 +179,6 @@ class SyncProspekDaily extends Command
             ->groupBy('kd_dealer')
             ->get();
 
-        foreach ($dealerSummary as $row) {
-            DB::connection('pgsql')
-                ->table('prospek_daily_summary')
-                ->upsert(
-                    [
-                        'tanggal' => null,
-                        'kd_dealer' => $row->kd_dealer,
-                        'id_flp' => null,
-                        'jml_prospek' => $row->total_prospek,
-                        'jml_deal' => $row->total_deal,
-                        'updated_at' => now(),
-                    ],
-                    ['tanggal', 'kd_dealer', 'id_flp'],
-                    ['jml_prospek', 'jml_deal', 'updated_at']
-                );
-        }
-
         $flpSummary = DB::connection('pgsql')
             ->table('prospek_daily_summary')
             ->whereNotNull('tanggal')
@@ -206,21 +188,36 @@ class SyncProspekDaily extends Command
             ->groupBy('kd_dealer', 'id_flp')
             ->get();
 
+        $rows = [];
+
+        foreach ($dealerSummary as $row) {
+            $rows[] = [
+                'tanggal' => null,
+                'kd_dealer' => $row->kd_dealer,
+                'id_flp' => null,
+                'jml_prospek' => $row->total_prospek,
+                'jml_deal' => $row->total_deal,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
         foreach ($flpSummary as $row) {
+            $rows[] = [
+                'tanggal' => null,
+                'kd_dealer' => $row->kd_dealer,
+                'id_flp' => $row->id_flp,
+                'jml_prospek' => $row->total_prospek,
+                'jml_deal' => $row->total_deal,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        if (!empty($rows)) {
             DB::connection('pgsql')
                 ->table('prospek_daily_summary')
-                ->upsert(
-                    [
-                        'tanggal' => null,
-                        'kd_dealer' => $row->kd_dealer,
-                        'id_flp' => $row->id_flp,
-                        'jml_prospek' => $row->total_prospek,
-                        'jml_deal' => $row->total_deal,
-                        'updated_at' => now(),
-                    ],
-                    ['tanggal', 'kd_dealer', 'id_flp'],
-                    ['jml_prospek', 'jml_deal', 'updated_at']
-                );
+                ->insert($rows);
         }
 
         $this->info("  Summary: {$dealerSummary->count()} dealer, {$flpSummary->count()} FLP");
