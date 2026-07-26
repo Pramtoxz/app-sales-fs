@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProspekDailySummary;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,46 @@ class JumlahProspekController extends Controller
             ->whereRaw('EXTRACT(YEAR FROM gb."Tanggal") = ?', [$tahun])
             ->count();
 
+        $startDate = sprintf('%04d-%02d-01', $tahun, $bulan);
+        $endDate = date('Y-m-t', strtotime($startDate));
+
+        $rincianDealer = ProspekDailySummary::where('kd_dealer', $dealer)
+            ->whereNull('id_flp')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal')
+            ->pluck('jml_prospek', 'tanggal');
+
+        $rincianDeal = ProspekDailySummary::where('kd_dealer', $dealer)
+            ->whereNull('id_flp')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal')
+            ->pluck('jml_deal', 'tanggal');
+
+        $rincianFlpProspek = ProspekDailySummary::where('id_flp', $idFlp)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal')
+            ->pluck('jml_prospek', 'tanggal');
+
+        $rincianFlpDeal = ProspekDailySummary::where('id_flp', $idFlp)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal')
+            ->pluck('jml_deal', 'tanggal');
+
+        $allDates = collect(array_unique(array_merge(
+            $rincianDealer->keys()->toArray(),
+            $rincianDeal->keys()->toArray(),
+            $rincianFlpProspek->keys()->toArray(),
+            $rincianFlpDeal->keys()->toArray()
+        )))->sort()->values();
+
+        $rincian = $allDates->map(fn($tgl) => [
+            'tanggal'      => $tgl,
+            'prospek'      => (int) $rincianDealer->get($tgl, 0),
+            'deal'         => (int) $rincianDeal->get($tgl, 0),
+            'prospek_flp'  => (int) $rincianFlpProspek->get($tgl, 0),
+            'deal_flp'     => (int) $rincianFlpDeal->get($tgl, 0),
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -68,6 +109,7 @@ class JumlahProspekController extends Controller
                 'my_prospek'      => $myProspek,
                 'deal'            => $dealDealer,
                 'deal_flp'        => $dealFlp,
+                'rincian'         => $rincian,
             ],
         ]);
     }
