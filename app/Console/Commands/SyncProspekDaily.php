@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -12,6 +13,8 @@ class SyncProspekDaily extends Command
 
     public function handle(): int
     {
+        $this->cleanOldMonths();
+
         $dates = [];
 
         if ($this->option('date')) {
@@ -35,8 +38,28 @@ class SyncProspekDaily extends Command
             $this->syncFlpLevel($date);
         }
 
+        $this->info('Update summary bulanan...');
+        $this->syncMonthlySummary();
+
         $this->info('Selesai.');
         return self::SUCCESS;
+    }
+
+    private function cleanOldMonths(): void
+    {
+        $currentMonth = date('Y-m-01');
+        $deleted = DB::connection('pgsql')
+            ->table('prospek_daily_summary')
+            ->where('tanggal', '<', $currentMonth)
+            ->delete();
+
+        $deletedSummary = DB::connection('pgsql')
+            ->table('prospek_daily_summary')
+            ->whereNull('tanggal')
+            ->where('updated_at', '<', $currentMonth)
+            ->delete();
+
+        $this->info("Hapus data lama: {$deleted} baris harian, {$deletedSummary} baris summary.");
     }
 
     private function syncDealerLevel(string $date): void
@@ -135,5 +158,71 @@ class SyncProspekDaily extends Command
                     ['jml_prospek', 'jml_deal', 'updated_at']
                 );
         }
+    }
+
+    private function syncMonthlySummary(): void
+    {
+        $startOfMonth = date('Y-m-01');
+        $endOfMonth = date('Y-m-t');
+
+        DB::connection('pgsql')
+            ->table('prospek_daily_summary')
+            ->whereNull('tanggal')
+            ->where('updated_at', '>=', $startOfMonth)
+            ->delete();
+
+        $dealerSummary = DB::connection('pgsql')
+            ->table('prospek_daily_summary')
+            ->whereNotNull('tanggal')
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->whereNull('id_flp')
+            ->select('kd_dealer', DB::raw('SUM(jml_prospek) as total_prospek'), DB::raw('SUM(jml_deal) as total_deal'))
+            ->groupBy('kd_dealer')
+            ->get();
+
+        foreach ($dealerSummary as $row) {
+            DB::connection('pgsql')
+                ->table('prospek_daily_summary')
+                ->upsert(
+                    [
+                        'tanggal' => null,
+                        'kd_dealer' => $row->kd_dealer,
+                        'id_flp' => null,
+                        'jml_prospek' => $row->total_prospek,
+                        'jml_deal' => $row->total_deal,
+                        'updated_at' => now(),
+                    ],
+                    ['tanggal', 'kd_dealer', 'id_flp'],
+                    ['jml_prospek', 'jml_deal', 'updated_at']
+                );
+        }
+
+        $flpSummary = DB::connection('pgsql')
+            ->table('prospek_daily_summary')
+            ->whereNotNull('tanggal')
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->whereNotNull('id_flp')
+            ->select('kd_dealer', 'id_flp', DB::raw('SUM(jml_prospek) as total_prospek'), DB::raw('SUM(jml_deal) as total_deal'))
+            ->groupBy('kd_dealer', 'id_flp')
+            ->get();
+
+        foreach ($flpSummary as $row) {
+            DB::connection('pgsql')
+                ->table('prospek_daily_summary')
+                ->upsert(
+                    [
+                        'tanggal' => null,
+                        'kd_dealer' => $row->kd_dealer,
+                        'id_flp' => $row->id_flp,
+                        'jml_prospek' => $row->total_prospek,
+                        'jml_deal' => $row->total_deal,
+                        'updated_at' => now(),
+                    ],
+                    ['tanggal', 'kd_dealer', 'id_flp'],
+                    ['jml_prospek', 'jml_deal', 'updated_at']
+                );
+        }
+
+        $this->info("  Summary: {$dealerSummary->count()} dealer, {$flpSummary->count()} FLP");
     }
 }
