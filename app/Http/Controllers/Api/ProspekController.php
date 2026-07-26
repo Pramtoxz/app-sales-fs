@@ -38,7 +38,6 @@ class ProspekController extends Controller
                 'guestbook.NoHp',
                 'guestbook.KodeType',
                 'guestbook.KodeWarna',
-                DB::raw("TRIM(COALESCE(mgm.\"DeskripsiType\", '') || ' ' || COALESCE(guestbook.\"DeskripsiWarnaMotor\", '')) as \"DeskripsiWarnaMotor\""),
                 'setupjenispembayaran.JenisPembayaran as rencana_pembayaran',
                 'SetupTipeCustomer.tipe_customer',
                 'guestbook.AlamatProspect',
@@ -51,7 +50,6 @@ class ProspekController extends Controller
             ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
-            ->leftJoin('H1_DOS.mastergroupsegmenmotor as mgm', 'mgm.KodeType', '=', 'guestbook.KodeType')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->orderBy('guestbook.Tanggal', 'desc');
 
