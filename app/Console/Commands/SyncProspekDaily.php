@@ -30,10 +30,6 @@ class SyncProspekDaily extends Command
         $this->info("Sync prospek daily untuk " . count($dates) . " tanggal...");
 
         foreach ($dates as $date) {
-            $dateCarbon = \Carbon\Carbon::parse($date);
-            $bulan = $dateCarbon->format('n');
-            $tahun = $dateCarbon->format('Y');
-
             $this->line("  {$date}");
             $this->syncDealerLevel($date);
             $this->syncFlpLevel($date);
@@ -48,7 +44,7 @@ class SyncProspekDaily extends Command
         $prospek = DB::connection('pgsql_sales')
             ->table('H1_DOS.guestbook')
             ->select('fk_dealer', DB::raw('COUNT(*) as total'))
-            ->whereDate('Tanggal', $date)
+            ->whereRaw('"Tanggal"::date = ?', [$date])
             ->whereNotNull('fk_dealer')
             ->groupBy('fk_dealer')
             ->pluck('total', 'fk_dealer');
@@ -58,7 +54,7 @@ class SyncProspekDaily extends Command
             ->join('H1_DOS.spk as s', DB::raw('s."IDGuestBook"'), '=', DB::raw('gb."IDGuestBook"'))
             ->join('H1_DOS.salesorder as so', DB::raw('so."IDSPK"'), '=', DB::raw('s."IDSpk"'))
             ->select('gb.fk_dealer', DB::raw('COUNT(DISTINCT gb."IDGuestBook") as total'))
-            ->whereDate('gb.Tanggal', $date)
+            ->whereRaw('gb."Tanggal"::date = ?', [$date])
             ->whereNotNull('gb.fk_dealer')
             ->groupBy('gb.fk_dealer')
             ->pluck('total', 'gb.fk_dealer');
@@ -91,7 +87,7 @@ class SyncProspekDaily extends Command
         $prospek = DB::connection('pgsql_sales')
             ->table('H1_DOS.guestbook')
             ->select('id_flp', DB::raw('COUNT(*) as total'))
-            ->whereDate('Tanggal', $date)
+            ->whereRaw('"Tanggal"::date = ?', [$date])
             ->whereNotNull('id_flp')
             ->where('id_flp', '!=', '')
             ->groupBy('id_flp')
@@ -102,7 +98,7 @@ class SyncProspekDaily extends Command
             ->join('H1_DOS.spk as s', DB::raw('s."IDGuestBook"'), '=', DB::raw('gb."IDGuestBook"'))
             ->join('H1_DOS.salesorder as so', DB::raw('so."IDSPK"'), '=', DB::raw('s."IDSpk"'))
             ->select('gb.id_flp', DB::raw('COUNT(DISTINCT gb."IDGuestBook") as total'))
-            ->whereDate('gb.Tanggal', $date)
+            ->whereRaw('gb."Tanggal"::date = ?', [$date])
             ->whereNotNull('gb.id_flp')
             ->where('gb.id_flp', '!=', '')
             ->groupBy('gb.id_flp')
