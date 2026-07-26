@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_Dealer;
 use App\Models\ProspekDailySummary;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -29,14 +30,16 @@ class JumlahProspekController extends Controller
 
         $isCurrentMonth = $bulan == (int) date('n') && $tahun == (int) date('Y');
 
+        $dealerNama = M_Dealer::where('kd_dealer_md', $dealer)->value('nm_alias_dealer') ?? $dealer;
+
         if ($isCurrentMonth) {
-            return $this->fromSummary($bulan, $tahun, $dealer, $idFlp);
+            return $this->fromSummary($bulan, $tahun, $dealer, $idFlp, $dealerNama);
         }
 
-        return $this->fromLiveQuery($bulan, $tahun, $dealer, $idFlp);
+        return $this->fromLiveQuery($bulan, $tahun, $dealer, $idFlp, $dealerNama);
     }
 
-    private function fromSummary(int $bulan, int $tahun, string $dealer, string $idFlp): JsonResponse
+    private function fromSummary(int $bulan, int $tahun, string $dealer, string $idFlp, string $dealerNama): JsonResponse
     {
         $startDate = sprintf('%04d-%02d-01', $tahun, $bulan);
         $endDate = date('Y-m-t', strtotime($startDate));
@@ -98,6 +101,8 @@ class JumlahProspekController extends Controller
             'data' => [
                 'bulan'           => $bulan,
                 'tahun'           => $tahun,
+                'dealer'          => $dealer,
+                'dealer_nama'     => $dealerNama,
                 'jumlah_prospek'  => $summaryDealer ? (int) $summaryDealer->jml_prospek : 0,
                 'my_prospek'      => $summaryFlp ? (int) $summaryFlp->jml_prospek : 0,
                 'deal'            => $summaryDealer ? (int) $summaryDealer->jml_deal : 0,
@@ -107,7 +112,7 @@ class JumlahProspekController extends Controller
         ]);
     }
 
-    private function fromLiveQuery(int $bulan, int $tahun, string $dealer, string $idFlp): JsonResponse
+    private function fromLiveQuery(int $bulan, int $tahun, string $dealer, string $idFlp, string $dealerNama): JsonResponse
     {
         $jumlahProspek = DB::connection('pgsql_sales')
             ->table('H1_DOS.guestbook')
@@ -147,6 +152,8 @@ class JumlahProspekController extends Controller
             'data' => [
                 'bulan'           => $bulan,
                 'tahun'           => $tahun,
+                'dealer'          => $dealer,
+                'dealer_nama'     => $dealerNama,
                 'jumlah_prospek'  => $jumlahProspek,
                 'my_prospek'      => $myProspek,
                 'deal'            => $dealDealer,
