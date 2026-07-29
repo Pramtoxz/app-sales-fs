@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\M_Dealer;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -18,20 +19,21 @@ class DashboardService
             return null;
         }
 
-        $dealer = DB::connection('pgsql_sales')
-            ->table('H1_DOS.masterdealer')
-            ->where('KodeDealer', $flp->kode_dealer)
-            ->first();
+        $dealer = M_Dealer::where('kd_dealer_md', $flp->kode_dealer)->first();
+
+        $namaBersih = $dealer?->nm_alias_dealer_2 && strlen($dealer->nm_alias_dealer_2) > 4
+            ? substr($dealer->nm_alias_dealer_2, 4)
+            : ($dealer?->nm_alias_dealer_2 ?? $flp->kode_dealer);
 
         $tblDealer = DB::connection('pgsql_sales')
             ->table('public.tbldealer')
-            ->where('kd_dealer_ahm', $flp->kode_dealer)
+            ->where('kd_dealer_md', $flp->kode_dealer)
             ->selectRaw('LEFT(fk_kelurahan, 4) AS kd_kota')
             ->first();
 
         return [
             'dealer_code' => $flp->kode_dealer,
-            'dealer_name' => $dealer->NamaDealer ?? 'Unknown',
+            'dealer_name' => $namaBersih,
             'kd_kota'     => $tblDealer->kd_kota ?? null,
         ];
     }

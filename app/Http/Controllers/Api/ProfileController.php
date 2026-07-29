@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\FlpResource;
+use App\Models\M_Dealer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -24,11 +25,18 @@ class ProfileController extends Controller
             ], 403);
         }
 
+        $dealerRaw = M_Dealer::where('kd_dealer_md', $flp->kode_dealer)->first();
+        $dealerNama = $dealerRaw?->nm_alias_dealer_2 && strlen($dealerRaw->nm_alias_dealer_2) > 4
+            ? substr($dealerRaw->nm_alias_dealer_2, 4)
+            : ($dealerRaw?->nm_alias_dealer_2 ?? $dealerRaw?->nm_alias_dealer ?? $flp->kode_dealer);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'user' => new UserResource($user),
                 'flp' => new FlpResource($flp),
+                'dealer' => $flp->kode_dealer,
+                'dealer_nama' => $dealerNama,
             ],
         ]);
     }

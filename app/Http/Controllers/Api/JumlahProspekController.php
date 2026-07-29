@@ -30,7 +30,10 @@ class JumlahProspekController extends Controller
 
         $isCurrentMonth = $bulan == (int) date('n') && $tahun == (int) date('Y');
 
-        $dealerNama = M_Dealer::where('kd_dealer_md', $dealer)->value('nm_alias_dealer') ?? $dealer;
+        $dealerRaw = M_Dealer::where('kd_dealer_md', $dealer)->first();
+        $dealerNama = $dealerRaw?->nm_alias_dealer_2 && strlen($dealerRaw->nm_alias_dealer_2) > 4
+            ? substr($dealerRaw->nm_alias_dealer_2, 4)
+            : ($dealerRaw?->nm_alias_dealer_2 ?? $dealerRaw?->nm_alias_dealer ?? $dealer);
 
         if ($isCurrentMonth) {
             return $this->fromSummary($bulan, $tahun, $dealer, $idFlp, $dealerNama);
