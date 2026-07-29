@@ -2,10 +2,10 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Illuminate\Support\Collection;
 
 class TargetDealerTemplateExport implements WithMultipleSheets
 {
@@ -13,6 +13,7 @@ class TargetDealerTemplateExport implements WithMultipleSheets
     {
         return [
             'Template' => new TargetDealerTemplateSheet(),
+            'Series' => new TargetDealerSeriesSheet(),
         ];
     }
 }
@@ -30,5 +31,30 @@ class TargetDealerTemplateSheet implements FromCollection, WithHeadings
     public function headings(): array
     {
         return ['kode_dealer', 'series', 'bulan_tahun', 'target'];
+    }
+}
+
+class TargetDealerSeriesSheet implements FromCollection, WithHeadings
+{
+    public function collection()
+    {
+        return DB::connection('pgsql_sales')
+            ->table('H1_DOS.mastergroupsegmenmotor')
+            ->select('Series', 'Categori')
+            ->whereNotNull('Series')
+            ->where('Series', '!=', '')
+            ->groupBy('Series', 'Categori')
+            ->orderByRaw("CASE \"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END")
+            ->orderBy('Series')
+            ->get()
+            ->map(fn($r) => [
+                'series' => $r->Series,
+                'kategori' => $r->Categori,
+            ]);
+    }
+
+    public function headings(): array
+    {
+        return ['series', 'kategori'];
     }
 }

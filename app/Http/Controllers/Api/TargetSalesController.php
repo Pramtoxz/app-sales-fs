@@ -55,16 +55,12 @@ class TargetSalesController extends Controller
             ], 404);
         }
 
-        $sorted = $targetData->sortByDesc(function($item) {
-            return $item->total_target;
-        })->values();
-
         $totalTarget = 0;
         $totalTerjual = 0;
 
-        $data = $sorted->filter(function($item) {
+        $data = $targetData->filter(function($item) {
             return $item->total_target > 0 || $item->total_terjual > 0;
-        })->map(function($item) use (&$totalTarget, &$totalTerjual) {
+        })->values()->map(function($item) use (&$totalTarget, &$totalTerjual) {
             $totalTarget += $item->total_target;
             $totalTerjual += $item->total_terjual;
 

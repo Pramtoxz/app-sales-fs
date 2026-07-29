@@ -84,7 +84,13 @@ class TargetController extends Controller
                 ->get()
                 ->groupBy('kode_dealer');
 
-            $data = $dealers->map(function ($dealer) use ($targets) {
+            $flpTargets = TargetFlp::whereIn('fk_dealer', $kodeDealerList)
+                ->where('bulan_tahun', $bulanTahun)
+                ->select('fk_dealer', DB::raw('SUM(target) as total_terbagi'))
+                ->groupBy('fk_dealer')
+                ->pluck('total_terbagi', 'fk_dealer');
+
+            $data = $dealers->map(function ($dealer) use ($targets, $flpTargets) {
                 $dealerTargets = $targets->get($dealer->kd_dealer_md, collect());
                 $namaBersih = $dealer->nm_alias_dealer_2 && strlen($dealer->nm_alias_dealer_2) > 4
                     ? substr($dealer->nm_alias_dealer_2, 4)
@@ -94,6 +100,7 @@ class TargetController extends Controller
                     'nm_dealer' => $namaBersih,
                     'alias' => $dealer->nm_alias_dealer,
                     'total_target' => $dealerTargets->sum('target'),
+                    'terbagi' => (int) $flpTargets->get($dealer->kd_dealer_md, 0),
                     'detail' => $dealerTargets->map(function ($t) {
                         return [
                             'series' => $t->series,

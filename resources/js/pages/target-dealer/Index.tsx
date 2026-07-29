@@ -37,6 +37,7 @@ interface DealerData {
     alias: string;
     nm_dealer: string;
     total_target: number;
+    terbagi: number;
     detail: { series: string; bulan_tahun: string; target: number }[];
 }
 
@@ -347,7 +348,7 @@ export default function Index() {
                                                 <TableCell className="font-mono text-sm">{d.kode_dealer}</TableCell>
                                                 <TableCell>{d.nm_dealer}</TableCell>
                                                 <TableCell className="text-right font-semibold">
-                                                    {d.total_target.toLocaleString('id-ID')}
+                                                    {d.terbagi.toLocaleString('id-ID')}/{d.total_target.toLocaleString('id-ID')}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Link href={`/target-dealer/${d.kode_dealer}?bulan_tahun=${bulanTahun}`}>

@@ -55,6 +55,7 @@ class TargetFlp extends Model
         $targetQuery = DB::connection('pgsql_sales')
             ->table('H1_DOS.tbl_target_flp as t')
             ->join('public.flp as f', 't.id_flp', '=', 'f.id_flp')
+            ->leftJoin('H1_DOS.mastergroupsegmenmotor as mgm', DB::raw('UPPER(t.series)'), '=', DB::raw('UPPER(mgm."Series")'))
             ->select([
                 't.id',
                 't.id_flp',
@@ -62,6 +63,7 @@ class TargetFlp extends Model
                 't.series',
                 't.bulan_tahun',
                 DB::raw('SUM(t.target) as total_target'),
+                DB::raw("CASE mgm.\"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END as idx_category"),
             ])
             ->where('t.fk_dealer', $fk_dealer)
             ->where('t.bulan_tahun', '>=', substr($start_date, 0, 7))
@@ -72,10 +74,10 @@ class TargetFlp extends Model
         }
 
         $targetData = $targetQuery
-            ->groupBy(['t.id', 't.id_flp', 'f.nama', 't.series', 't.bulan_tahun'])
+            ->groupBy(['t.id', 't.id_flp', 'f.nama', 't.series', 't.bulan_tahun', DB::raw("CASE mgm.\"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END")])
+            ->orderByRaw("CASE mgm.\"Categori\" WHEN 'CUB' THEN 1 WHEN 'AT' THEN 2 WHEN 'SPORT' THEN 3 WHEN 'EV' THEN 4 ELSE 5 END")
+            ->orderBy('t.series')
             ->orderBy('t.bulan_tahun', 'desc')
-            ->orderBy('t.id')
-            ->orderByDesc('total_target')
             ->get();
 
         $targetKeys = [];
