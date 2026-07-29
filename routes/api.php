@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\MasterController;
 use App\Http\Controllers\Api\ExternalAuthController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DashboardController;
+
 
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth');
 Route::post('/auth/biometric/login', [AuthController::class, 'biometricLogin'])->middleware('throttle:auth');
@@ -27,7 +29,8 @@ Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::get('/auth/devices', [AuthController::class, 'devices']);
     Route::post('/auth/biometric/register', [AuthController::class, 'biometricRegister']);
     Route::post('/auth/biometric/revoke', [AuthController::class, 'biometricRevoke']);
-    
+   Route::get('/dashboard', [DashboardController::class, 'index']);
+ 
     Route::get('/target-sales', [TargetSalesController::class, 'index']);
     Route::get('/stock', [StockController::class, 'index']);
     Route::get('/indent', [IndentController::class, 'index']);
