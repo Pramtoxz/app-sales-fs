@@ -60,7 +60,7 @@ class ProspekController extends Controller
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
             ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
-            ->leftJoin('master_schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
+            ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->orderBy('guestbook.Tanggal', 'desc');
 
