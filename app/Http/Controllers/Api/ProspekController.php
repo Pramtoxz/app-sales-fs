@@ -131,7 +131,8 @@ class ProspekController extends Controller
                 'guestbook.AlamatKantorProspect',
                 'master_source_leads.deskripsi as source',
                 'guestbook.Keterangan',
-                'guestbook.Status_guestbook',
+                DB::raw("COALESCE(tbl_hasil_status_fu.nm_hasil_fu, 'Belum Follow Up') as \"Status_guestbook\""),
+                'FUProspek.hasil_fu_ve as status_id',
                 'guestbook.created_at',
                 'guestbook.updated_at'
             )
@@ -139,6 +140,8 @@ class ProspekController extends Controller
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
             ->leftJoin('H1_DOS.mastergroupsegmenmotor as mgm', 'mgm.KodeType', '=', 'guestbook.KodeType')
+            ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
+            ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
             ->where('guestbook.IDGuestBook', $id)
             ->where('guestbook.id_flp', $flp->id_flp)
             ->first();
