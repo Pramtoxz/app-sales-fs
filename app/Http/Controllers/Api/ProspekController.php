@@ -25,8 +25,8 @@ class ProspekController extends Controller
         }
 
         $perPage = $request->query('per_page', 15);
-        $bulan = $request->query('bulan');
-        $tahun = $request->query('tahun');
+        $bulan = $request->query('bulan', now()->month);
+        $tahun = $request->query('tahun', now()->year);
         $status = $request->query('status');
 
         $query = DB::connection('pgsql_sales')
@@ -44,25 +44,41 @@ class ProspekController extends Controller
                 'guestbook.AlamatKantorProspect',
                 'master_source_leads.deskripsi as source',
                 'guestbook.Keterangan',
-                'guestbook.Status_guestbook',
+                DB::raw("
+                    CASE 
+                        WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
+                        WHEN \"FUProspek\".hasil_fu_ve = 1 THEN 'f'
+                        WHEN \"FUProspek\".hasil_fu_ve = 2 THEN 'b'
+                        WHEN \"FUProspek\".hasil_fu_ve = 3 THEN 't'
+                        WHEN \"FUProspek\".hasil_fu_ve = 4 THEN 'b'
+                        ELSE 'f'
+                    END as \"Status_guestbook\"
+                "),
                 'guestbook.created_at'
             )
             ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
+            ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
+            ->leftJoin('master_schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->orderBy('guestbook.Tanggal', 'desc');
 
-        if ($bulan) {
-            $query->whereRaw('EXTRACT(MONTH FROM "Tanggal") = ?', [$bulan]);
-        }
-
-        if ($tahun) {
-            $query->whereRaw('EXTRACT(YEAR FROM "Tanggal") = ?', [$tahun]);
-        }
+        // Always apply month/year filter (with default values)
+        $query->whereRaw('EXTRACT(MONTH FROM "Tanggal") = ?', [$bulan]);
+        $query->whereRaw('EXTRACT(YEAR FROM "Tanggal") = ?', [$tahun]);
 
         if ($status) {
-            $query->where('guestbook.Status_guestbook', $status);
+            $query->whereRaw("
+                CASE 
+                    WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
+                    WHEN \"FUProspek\".hasil_fu_ve = 1 THEN 'f'
+                    WHEN \"FUProspek\".hasil_fu_ve = 2 THEN 'b'
+                    WHEN \"FUProspek\".hasil_fu_ve = 3 THEN 't'
+                    WHEN \"FUProspek\".hasil_fu_ve = 4 THEN 'b'
+                    ELSE 'f'
+                END = ?
+            ", [$status]);
         }
 
         $prospek = $query->paginate($perPage);
