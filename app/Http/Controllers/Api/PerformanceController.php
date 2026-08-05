@@ -27,14 +27,6 @@ class PerformanceController extends Controller
         $limit = $request->query('limit', 20);
 
         $bulanTahunFormat = date('Y-m', strtotime($startDate));
-
-        \Log::info('Performance Query Debug', [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'bulan_tahun_format' => $bulanTahunFormat,
-            'flp_id_flp' => $flp->id_flp,
-        ]);
-
         $rankings = DB::connection('pgsql_sales')->select("
             WITH target_summary AS (
                 SELECT
@@ -82,12 +74,6 @@ class PerformanceController extends Controller
             ORDER BY persentase DESC
             LIMIT ?
         ", [$bulanTahunFormat, $flp->kode_dealer, $startDate, $endDate, $flp->kode_dealer, $limit]);
-
-        \Log::info('Performance Query Result', [
-            'count' => count($rankings),
-            'first_result' => !empty($rankings) ? (array)$rankings[0] : null,
-        ]);
-
         $myRank = null;
         $leaderboard = [];
 

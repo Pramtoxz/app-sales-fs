@@ -37,16 +37,34 @@ class ProspekController extends Controller
             ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
             ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
+            ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
             ->where('crm_ve.assign_dealer_status', 't')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
             ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun]);
 
         if ($status) {
-            if ($status === 'Belum Follow Up') {
-                $baseQuery->whereNull('FUProspek.hasil_fu_ve');
-            } else {
-                $baseQuery->where('tbl_hasil_status_fu.nm_hasil_fu', $status);
+            if ($status === 'DEAL') {
+                $baseQuery->whereNotNull('spk.IDGuestBook');
+            } elseif ($status === 'NOT DEAL') {
+                $baseQuery->whereNull('spk.IDGuestBook')
+                    ->where(function($q) {
+                        $q->whereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%not deal%'")
+                          ->orWhereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%reject%'")
+                          ->orWhereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%cancel%'")
+                          ->orWhereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%gagal%'");
+                    });
+            } elseif ($status === 'PENDING') {
+                $baseQuery->whereNull('spk.IDGuestBook')
+                    ->where(function($q) {
+                        $q->whereNull('tbl_hasil_status_fu.nm_hasil_fu')
+                          ->orWhere(function($q2) {
+                              $q2->whereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) NOT LIKE '%not deal%'")
+                                 ->whereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) NOT LIKE '%reject%'")
+                                 ->whereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) NOT LIKE '%cancel%'")
+                                 ->whereRaw("LOWER(tbl_hasil_status_fu.nm_hasil_fu) NOT LIKE '%gagal%'");
+                          });
+                    });
             }
         }
 
@@ -73,7 +91,14 @@ class ProspekController extends Controller
                 guestbook."AlamatKantorProspect",
                 master_source_leads.deskripsi as source,
                 guestbook."Keterangan",
-                COALESCE(tbl_hasil_status_fu.nm_hasil_fu, \'Belum Follow Up\') as "Status_guestbook",
+                CASE 
+                    WHEN spk."IDGuestBook" IS NOT NULL THEN \'DEAL\'
+                    WHEN LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%not deal%\' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%reject%\' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%cancel%\' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%gagal%\' THEN \'NOT DEAL\'
+                    ELSE \'PENDING\'
+                END as "Status_guestbook",
                 "FUProspek".hasil_fu_ve as status_id,
                 guestbook.created_at')
             ->orderBy('master_kons_ve.id_leads')
@@ -131,7 +156,7 @@ class ProspekController extends Controller
                 'guestbook.AlamatKantorProspect',
                 'master_source_leads.deskripsi as source',
                 'guestbook.Keterangan',
-                DB::raw("COALESCE(tbl_hasil_status_fu.nm_hasil_fu, 'Belum Follow Up') as \"Status_guestbook\""),
+                DB::raw("UPPER(COALESCE(tbl_hasil_status_fu.nm_hasil_fu, 'Belum Follow Up')) as \"Status_guestbook\""),
                 'FUProspek.hasil_fu_ve as status_id',
                 'guestbook.created_at',
                 'guestbook.updated_at'
@@ -142,6 +167,7 @@ class ProspekController extends Controller
             ->leftJoin('H1_DOS.mastergroupsegmenmotor as mgm', 'mgm.KodeType', '=', 'guestbook.KodeType')
             ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
+            ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
             ->where('guestbook.IDGuestBook', $id)
             ->where('guestbook.id_flp', $flp->id_flp)
             ->first();

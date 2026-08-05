@@ -24,14 +24,6 @@ class TargetSalesController extends Controller
         $startDate = $request->input('start_date', date('Y-m-01'));
         $endDate = $request->input('end_date', date('Y-m-d'));
 
-        \Log::info('Target Sales Request', [
-            'user_id' => $user->id,
-            'flp_id' => $flp->id_flp,
-            'dealer' => $flp->kode_dealer,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ]);
-
         $targetData = TargetFlp::getTargetSalesComparison(
             $flp->kode_dealer,
             $flp->id_flp,
@@ -39,10 +31,6 @@ class TargetSalesController extends Controller
             $endDate
         );
 
-        \Log::info('Target Sales Result', [
-            'count' => $targetData->count(),
-            'data' => $targetData->toArray(),
-        ]);
 
         $hasData = $targetData->filter(function($item) {
             return $item->total_target > 0 || $item->total_terjual > 0;
