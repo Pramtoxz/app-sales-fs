@@ -41,6 +41,7 @@ class ProspekController extends Controller
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
             ->select(
+                DB::raw('DISTINCT ON (master_kons_ve.id_leads) master_kons_ve.id_leads'),
                 'guestbook.IDGuestBook',
                 'guestbook.Tanggal',
                 'guestbook.NamaCustomer',
@@ -61,8 +62,8 @@ class ProspekController extends Controller
             ->where('guestbook.id_flp', $flp->id_flp)
             ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
             ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
-            ->orderBy('guestbook.Tanggal', 'desc')
-            ->distinct();
+            ->orderBy('master_kons_ve.id_leads')
+            ->orderBy('guestbook.Tanggal', 'desc');
 
         if ($status) {
             // Filter by actual status text from master table
