@@ -47,10 +47,10 @@ class ProspekController extends Controller
                 DB::raw("
                     CASE 
                         WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
-                        WHEN \"FUProspek\".hasil_fu_ve = 1 THEN 'f'
-                        WHEN \"FUProspek\".hasil_fu_ve = 2 THEN 'b'
-                        WHEN \"FUProspek\".hasil_fu_ve = 3 THEN 't'
-                        WHEN \"FUProspek\".hasil_fu_ve = 4 THEN 'b'
+                        WHEN \"FUProspek\".hasil_fu_ve = '1' THEN 'f'
+                        WHEN \"FUProspek\".hasil_fu_ve = '2' THEN 'b'
+                        WHEN \"FUProspek\".hasil_fu_ve = '3' THEN 't'
+                        WHEN \"FUProspek\".hasil_fu_ve = '4' THEN 'b'
                         ELSE 'f'
                     END as \"Status_guestbook\"
                 "),
@@ -72,10 +72,10 @@ class ProspekController extends Controller
             $query->whereRaw("
                 CASE 
                     WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
-                    WHEN \"FUProspek\".hasil_fu_ve = 1 THEN 'f'
-                    WHEN \"FUProspek\".hasil_fu_ve = 2 THEN 'b'
-                    WHEN \"FUProspek\".hasil_fu_ve = 3 THEN 't'
-                    WHEN \"FUProspek\".hasil_fu_ve = 4 THEN 'b'
+                    WHEN \"FUProspek\".hasil_fu_ve = '1' THEN 'f'
+                    WHEN \"FUProspek\".hasil_fu_ve = '2' THEN 'b'
+                    WHEN \"FUProspek\".hasil_fu_ve = '3' THEN 't'
+                    WHEN \"FUProspek\".hasil_fu_ve = '4' THEN 'b'
                     ELSE 'f'
                 END = ?
             ", [$status]);
