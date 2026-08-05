@@ -28,16 +28,10 @@ class JumlahProspekController extends Controller
         $dealer = $flp->kode_dealer;
         $idFlp  = $flp->id_flp;
 
-        $isCurrentMonth = $bulan == (int) date('n') && $tahun == (int) date('Y');
-
         $dealerRaw = M_Dealer::where('kd_dealer_md', $dealer)->first();
         $dealerNama = $dealerRaw?->nm_alias_dealer_2 && strlen($dealerRaw->nm_alias_dealer_2) > 4
             ? substr($dealerRaw->nm_alias_dealer_2, 4)
             : ($dealerRaw?->nm_alias_dealer_2 ?? $dealerRaw?->nm_alias_dealer ?? $dealer);
-
-        if ($isCurrentMonth) {
-            return $this->fromSummary($bulan, $tahun, $dealer, $idFlp, $dealerNama);
-        }
 
         return $this->fromLiveQuery($bulan, $tahun, $dealer, $idFlp, $dealerNama);
     }
