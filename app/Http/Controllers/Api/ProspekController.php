@@ -28,62 +28,68 @@ class ProspekController extends Controller
         $bulan = $request->query('bulan', now()->month);
         $tahun = $request->query('tahun', now()->year);
         $status = $request->query('status');
+        $page = $request->query('page', 1);
 
-        // Query from CRM leads (master_kons_ve) to sync with web report logic
-        $query = DB::connection('pgsql_sales')
+        // Base query for filtering
+        $baseQuery = DB::connection('pgsql_sales')
             ->table('HC3.master_kons_ve')
             ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
-            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
             ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
             ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
-            ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
-            ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
-            ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
-            ->select(
-                DB::raw('DISTINCT ON (master_kons_ve.id_leads) master_kons_ve.id_leads'),
-                'guestbook.IDGuestBook',
-                'guestbook.Tanggal',
-                'guestbook.NamaCustomer',
-                'guestbook.NoHp',
-                'guestbook.KodeType',
-                'guestbook.KodeWarna',
-                'setupjenispembayaran.JenisPembayaran as rencana_pembayaran',
-                'SetupTipeCustomer.tipe_customer',
-                'guestbook.AlamatProspect',
-                'guestbook.AlamatKantorProspect',
-                'master_source_leads.deskripsi as source',
-                'guestbook.Keterangan',
-                DB::raw("COALESCE(\"tbl_hasil_status_fu\".nm_hasil_fu, 'Belum Follow Up') as \"Status_guestbook\""),
-                'FUProspek.hasil_fu_ve as status_id',
-                'guestbook.created_at'
-            )
             ->where('crm_ve.assign_dealer_status', 't')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
-            ->orderBy('master_kons_ve.id_leads')
-            ->orderBy('guestbook.Tanggal', 'desc');
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun]);
 
         if ($status) {
-            // Filter by actual status text from master table
             if ($status === 'Belum Follow Up') {
-                $query->whereNull('FUProspek.hasil_fu_ve');
+                $baseQuery->whereNull('FUProspek.hasil_fu_ve');
             } else {
-                $query->where('tbl_hasil_status_fu.nm_hasil_fu', $status);
+                $baseQuery->where('tbl_hasil_status_fu.nm_hasil_fu', $status);
             }
         }
 
-        $prospek = $query->paginate($perPage);
+        // Count distinct leads
+        $total = (clone $baseQuery)
+            ->distinct()
+            ->count('master_kons_ve.id_leads');
+
+        // Get data with DISTINCT ON
+        $data = (clone $baseQuery)
+            ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
+            ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
+            ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
+            ->selectRaw('DISTINCT ON (master_kons_ve.id_leads) master_kons_ve.id_leads, 
+                guestbook."IDGuestBook",
+                guestbook."Tanggal",
+                guestbook."NamaCustomer",
+                guestbook."NoHp",
+                guestbook."KodeType",
+                guestbook."KodeWarna",
+                setupjenispembayaran."JenisPembayaran" as rencana_pembayaran,
+                "SetupTipeCustomer".tipe_customer,
+                guestbook."AlamatProspect",
+                guestbook."AlamatKantorProspect",
+                master_source_leads.deskripsi as source,
+                guestbook."Keterangan",
+                COALESCE(tbl_hasil_status_fu.nm_hasil_fu, \'Belum Follow Up\') as "Status_guestbook",
+                "FUProspek".hasil_fu_ve as status_id,
+                guestbook.created_at')
+            ->orderBy('master_kons_ve.id_leads')
+            ->orderBy('guestbook.Tanggal', 'desc')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $prospek->items(),
+            'data' => $data,
             'meta' => [
-                'current_page' => $prospek->currentPage(),
-                'last_page' => $prospek->lastPage(),
-                'per_page' => $prospek->perPage(),
-                'total' => $prospek->total(),
+                'current_page' => (int) $page,
+                'last_page' => (int) ceil($total / $perPage),
+                'per_page' => (int) $perPage,
+                'total' => $total,
             ],
         ]);
     }
