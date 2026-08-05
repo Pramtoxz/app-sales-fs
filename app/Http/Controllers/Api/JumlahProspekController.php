@@ -164,6 +164,84 @@ class JumlahProspekController extends Controller
             ->distinct()
             ->count('master_kons_ve.id_leads');
 
+        // Daily breakdown - prospek dealer
+        $dailyProspekDealer = DB::connection('pgsql_sales')
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->selectRaw('DATE("guestbook"."Tanggal") as tanggal, COUNT(DISTINCT master_kons_ve.id_leads) as count')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->groupBy(DB::raw('DATE("guestbook"."Tanggal")'))
+            ->orderBy('tanggal')
+            ->pluck('count', 'tanggal');
+
+        // Daily breakdown - deal dealer
+        $dailyDealDealer = DB::connection('pgsql_sales')
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->join('H1_DOS.spk as s', 's.IDGuestBook', '=', 'guestbook.IDGuestBook')
+            ->join('H1_DOS.salesorder as so', 'so.IDSPK', '=', 's.IDSpk')
+            ->selectRaw('DATE("guestbook"."Tanggal") as tanggal, COUNT(DISTINCT master_kons_ve.id_leads) as count')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->groupBy(DB::raw('DATE("guestbook"."Tanggal")'))
+            ->orderBy('tanggal')
+            ->pluck('count', 'tanggal');
+
+        // Daily breakdown - prospek flp
+        $dailyProspekFlp = DB::connection('pgsql_sales')
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->selectRaw('DATE("guestbook"."Tanggal") as tanggal, COUNT(DISTINCT master_kons_ve.id_leads) as count')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.id_flp', $idFlp)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->groupBy(DB::raw('DATE("guestbook"."Tanggal")'))
+            ->orderBy('tanggal')
+            ->pluck('count', 'tanggal');
+
+        // Daily breakdown - deal flp
+        $dailyDealFlp = DB::connection('pgsql_sales')
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->join('H1_DOS.spk as s', 's.IDGuestBook', '=', 'guestbook.IDGuestBook')
+            ->join('H1_DOS.salesorder as so', 'so.IDSPK', '=', 's.IDSpk')
+            ->selectRaw('DATE("guestbook"."Tanggal") as tanggal, COUNT(DISTINCT master_kons_ve.id_leads) as count')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->where('guestbook.id_flp', $idFlp)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->groupBy(DB::raw('DATE("guestbook"."Tanggal")'))
+            ->orderBy('tanggal')
+            ->pluck('count', 'tanggal');
+
+        // Merge all dates
+        $allDates = collect(array_unique(array_merge(
+            $dailyProspekDealer->keys()->toArray(),
+            $dailyDealDealer->keys()->toArray(),
+            $dailyProspekFlp->keys()->toArray(),
+            $dailyDealFlp->keys()->toArray()
+        )))->sort()->values();
+
+        // Build rincian array
+        $rincian = $allDates->map(fn($tgl) => [
+            'tanggal'      => $tgl,
+            'prospek'      => (int) $dailyProspekDealer->get($tgl, 0),
+            'deal'         => (int) $dailyDealDealer->get($tgl, 0),
+            'prospek_flp'  => (int) $dailyProspekFlp->get($tgl, 0),
+            'deal_flp'     => (int) $dailyDealFlp->get($tgl, 0),
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -175,7 +253,7 @@ class JumlahProspekController extends Controller
                 'my_prospek'      => $myProspek,
                 'deal'            => $dealDealer,
                 'deal_flp'        => $dealFlp,
-                'rincian'         => [],
+                'rincian'         => $rincian,
             ],
         ]);
     }
