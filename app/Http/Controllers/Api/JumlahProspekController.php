@@ -117,38 +117,62 @@ class JumlahProspekController extends Controller
 
     private function fromLiveQuery(int $bulan, int $tahun, string $dealer, string $idFlp, string $dealerNama): JsonResponse
     {
+        // Count total prospek dealer from CRM leads (synced with web report logic)
         $jumlahProspek = DB::connection('pgsql_sales')
-            ->table('H1_DOS.guestbook')
-            ->where('fk_dealer', $dealer)
-            ->whereRaw('EXTRACT(MONTH FROM "Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM "Tanggal") = ?', [$tahun])
-            ->count();
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->distinct()
+            ->count('master_kons_ve.id_leads');
 
+        // Count my prospek from CRM leads
         $myProspek = DB::connection('pgsql_sales')
-            ->table('H1_DOS.guestbook')
-            ->where('id_flp', $idFlp)
-            ->whereRaw('EXTRACT(MONTH FROM "Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM "Tanggal") = ?', [$tahun])
-            ->count();
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.id_flp', $idFlp)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->distinct()
+            ->count('master_kons_ve.id_leads');
 
+        // Count deal dealer from CRM leads with SPK
         $dealDealer = DB::connection('pgsql_sales')
-            ->table('H1_DOS.guestbook as gb')
-            ->join('H1_DOS.spk as s', DB::raw('s."IDGuestBook"'), '=', DB::raw('gb."IDGuestBook"'))
-            ->join('H1_DOS.salesorder as so', DB::raw('so."IDSPK"'), '=', DB::raw('s."IDSpk"'))
-            ->where('gb.fk_dealer', $dealer)
-            ->whereRaw('EXTRACT(MONTH FROM gb."Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM gb."Tanggal") = ?', [$tahun])
-            ->count();
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->join('H1_DOS.spk as s', 's.IDGuestBook', '=', 'guestbook.IDGuestBook')
+            ->join('H1_DOS.salesorder as so', 'so.IDSPK', '=', 's.IDSpk')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->distinct()
+            ->count('master_kons_ve.id_leads');
 
+        // Count deal flp from CRM leads with SPK
         $dealFlp = DB::connection('pgsql_sales')
-            ->table('H1_DOS.guestbook as gb')
-            ->join('H1_DOS.spk as s', DB::raw('s."IDGuestBook"'), '=', DB::raw('gb."IDGuestBook"'))
-            ->join('H1_DOS.salesorder as so', DB::raw('so."IDSPK"'), '=', DB::raw('s."IDSpk"'))
-            ->where('gb.fk_dealer', $dealer)
-            ->where('gb.id_flp', $idFlp)
-            ->whereRaw('EXTRACT(MONTH FROM gb."Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM gb."Tanggal") = ?', [$tahun])
-            ->count();
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->join('H1_DOS.spk as s', 's.IDGuestBook', '=', 'guestbook.IDGuestBook')
+            ->join('H1_DOS.salesorder as so', 'so.IDSPK', '=', 's.IDSpk')
+            ->where('crm_ve.assign_dealer_status', 't')
+            ->where('guestbook.fk_dealer', $dealer)
+            ->where('guestbook.id_flp', $idFlp)
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->distinct()
+            ->count('master_kons_ve.id_leads');
 
         return response()->json([
             'success' => true,

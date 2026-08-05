@@ -29,8 +29,17 @@ class ProspekController extends Controller
         $tahun = $request->query('tahun', now()->year);
         $status = $request->query('status');
 
+        // Query from CRM leads (master_kons_ve) to sync with web report logic
         $query = DB::connection('pgsql_sales')
-            ->table('H1_DOS.guestbook')
+            ->table('HC3.master_kons_ve')
+            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
+            ->join('HC3.crm_ve_log', 'crm_ve_log.id_kons', '=', 'crm_ve.id_kons')
+            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
+            ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
+            ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
+            ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
+            ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
             ->select(
                 'guestbook.IDGuestBook',
                 'guestbook.Tanggal',
@@ -44,41 +53,24 @@ class ProspekController extends Controller
                 'guestbook.AlamatKantorProspect',
                 'master_source_leads.deskripsi as source',
                 'guestbook.Keterangan',
-                DB::raw("
-                    CASE 
-                        WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
-                        WHEN \"FUProspek\".hasil_fu_ve = '1' THEN 'f'
-                        WHEN \"FUProspek\".hasil_fu_ve = '2' THEN 'b'
-                        WHEN \"FUProspek\".hasil_fu_ve = '3' THEN 't'
-                        WHEN \"FUProspek\".hasil_fu_ve = '4' THEN 'b'
-                        ELSE 'f'
-                    END as \"Status_guestbook\"
-                "),
+                DB::raw("COALESCE(\"tbl_hasil_status_fu\".nm_hasil_fu, 'Belum Follow Up') as \"Status_guestbook\""),
+                'FUProspek.hasil_fu_ve as status_id',
                 'guestbook.created_at'
             )
-            ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
-            ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
-            ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
-            ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
-            ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
+            ->where('crm_ve.assign_dealer_status', 't')
             ->where('guestbook.id_flp', $flp->id_flp)
-            ->orderBy('guestbook.Tanggal', 'desc');
-
-        // Always apply month/year filter (with default values)
-        $query->whereRaw('EXTRACT(MONTH FROM "Tanggal") = ?', [$bulan]);
-        $query->whereRaw('EXTRACT(YEAR FROM "Tanggal") = ?', [$tahun]);
+            ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->orderBy('guestbook.Tanggal', 'desc')
+            ->distinct();
 
         if ($status) {
-            $query->whereRaw("
-                CASE 
-                    WHEN \"FUProspek\".hasil_fu_ve IS NULL THEN 'f'
-                    WHEN \"FUProspek\".hasil_fu_ve = '1' THEN 'f'
-                    WHEN \"FUProspek\".hasil_fu_ve = '2' THEN 'b'
-                    WHEN \"FUProspek\".hasil_fu_ve = '3' THEN 't'
-                    WHEN \"FUProspek\".hasil_fu_ve = '4' THEN 'b'
-                    ELSE 'f'
-                END = ?
-            ", [$status]);
+            // Filter by actual status text from master table
+            if ($status === 'Belum Follow Up') {
+                $query->whereNull('FUProspek.hasil_fu_ve');
+            } else {
+                $query->where('tbl_hasil_status_fu.nm_hasil_fu', $status);
+            }
         }
 
         $prospek = $query->paginate($perPage);
@@ -797,39 +789,10 @@ class ProspekController extends Controller
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $user = $request->user();
-        $flp = $user->flp;
-
-        if (!$flp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User tidak terdaftar sebagai FLP',
-            ], 403);
-        }
-
-        $prospek = GuestBook::where('IDGuestBook', $id)
-            ->where('id_flp', $flp->id_flp)
-            ->first();
-
-        if (!$prospek) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Prospek tidak ditemukan',
-            ], 404);
-        }
-
-        if ($prospek->Status_guestbook === 't') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Prospek yang sudah approved tidak dapat dihapus',
-            ], 403);
-        }
-
-        $prospek->delete();
-
+        // Delete prospek functionality has been disabled
         return response()->json([
-            'success' => true,
-            'message' => 'Prospek berhasil dihapus',
-        ]);
+            'success' => false,
+            'message' => 'Hapus prospek tidak diizinkan',
+        ], 403);
     }
 }
