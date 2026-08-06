@@ -117,7 +117,13 @@ class NotificationWebController extends Controller
                     continue;
                 }
 
-                $userId = $devices->first()->user_id;
+                $firstDevice = $devices->first();
+                if (!$firstDevice || !$firstDevice->user_id) {
+                    $noDeviceCount++;
+                    continue;
+                }
+
+                $userId = $firstDevice->user_id;
 
                 Notification::create([
                     'user_id' => $userId,
