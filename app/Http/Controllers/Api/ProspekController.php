@@ -211,25 +211,27 @@ class ProspekController extends Controller
             'id_flp' => $flp->id_flp
         ]);
 
+        // Test query - HANYA filter no_hp untuk verifikasi data ada
         $lead = DB::connection('pgsql_sales')
-            ->table('H1_HC3.FUProspek')
-            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'FUProspek.fk_prospek')
-            ->join('HC3.master_kons_ve', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->table('HC3.master_kons_ve')
+            ->leftJoin('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
             ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
-            ->where('guestbook.fk_dealer', $flp->kode_dealer)
-            ->whereNull('spk.IDGuestBook')
             ->where('master_kons_ve.no_hp', $noHp)
-            ->whereIn('master_kons_ve.stage_id', ['3', '5', '6', '7', '8'])
             ->orderBy('master_kons_ve.created_at', 'DESC')
             ->select(
                 'master_kons_ve.nama',
-                DB::raw('guestbook."NoHp" as no_hp'),
+                'master_kons_ve.no_hp',
                 'master_kons_ve.id_guestbook',
-                'master_source_leads.deskripsi as deskripsi_source',
-                'master_kons_ve.id_leads'
+                'master_kons_ve.id_leads',
+                'master_kons_ve.stage_id',
+                DB::raw('guestbook."fk_dealer" as dealer_code'),
+                DB::raw('spk."IDSpk" as spk_id'),
+                'master_source_leads.deskripsi as deskripsi_source'
             )
             ->first();
+        
+        \Log::info('CekLeads Result', ['found' => !empty($lead), 'data' => $lead]);
 
         DB::connection('pgsql_sales')->table('HC3.log_search_guestbook')->insert([
             'id_flp' => $flp->id_flp,
