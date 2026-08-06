@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
-
 class FirebaseService
 {
     private ?string $projectId = null;
@@ -24,7 +22,6 @@ class FirebaseService
         $credentialsPath = base_path(env('FCM_CREDENTIALS_PATH', 'firebase/salesfirebase.json'));
 
         if (!file_exists($credentialsPath)) {
-            Log::error('Firebase credentials file not found', ['path' => $credentialsPath]);
             throw new \Exception("Firebase credentials file not found: {$credentialsPath}");
         }
 
@@ -32,21 +29,10 @@ class FirebaseService
         $credentials = json_decode($credentialsContent, true);
 
         if ($credentials === null) {
-            Log::error('Failed to parse Firebase credentials JSON', [
-                'path' => $credentialsPath,
-                'json_error' => json_last_error_msg(),
-                'content_length' => strlen($credentialsContent)
-            ]);
             throw new \Exception("Failed to parse Firebase credentials JSON: " . json_last_error_msg());
         }
 
         if (!isset($credentials['project_id']) || !isset($credentials['client_email']) || !isset($credentials['private_key'])) {
-            Log::error('Firebase credentials missing required fields', [
-                'path' => $credentialsPath,
-                'has_project_id' => isset($credentials['project_id']),
-                'has_client_email' => isset($credentials['client_email']),
-                'has_private_key' => isset($credentials['private_key'])
-            ]);
             throw new \Exception("Firebase credentials file is missing required fields");
         }
 
@@ -128,12 +114,10 @@ class FirebaseService
             $result   = json_decode($response, true);
 
             if ($httpCode === 200) {
-                Log::info('FCM sent', ['name' => $result['name'] ?? '']);
                 return ['success' => true, 'message' => 'Notification sent successfully'];
             }
 
             $error = $result['error']['message'] ?? 'Unknown FCM error';
-            Log::error('FCM failed', ['code' => $httpCode, 'error' => $error]);
 
             if ($httpCode === 404) {
                 return ['success' => false, 'message' => 'FCM token not found or expired', 'error_type' => 'token_not_found'];
@@ -144,7 +128,6 @@ class FirebaseService
 
             return ['success' => false, 'message' => $error, 'error_type' => 'general_error'];
         } catch (\Exception $e) {
-            Log::error('FCM Error: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'error_type' => 'general_error'];
         }
     }
