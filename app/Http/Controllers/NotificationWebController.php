@@ -110,6 +110,7 @@ class NotificationWebController extends Controller
                 $devices = FlpDevice::where('id_flp', $flp->id_flp)
                     ->whereNotNull('fcm_token')
                     ->where('fcm_token', '!=', '')
+                    ->whereNotNull('user_id')
                     ->get();
 
                 if ($devices->isEmpty()) {
@@ -118,12 +119,12 @@ class NotificationWebController extends Controller
                 }
 
                 $firstDevice = $devices->first();
-                if (!$firstDevice || !$firstDevice->user_id) {
+                $userId = $firstDevice?->user_id;
+                
+                if (!$userId) {
                     $noDeviceCount++;
                     continue;
                 }
-
-                $userId = $firstDevice->user_id;
 
                 Notification::create([
                     'user_id' => $userId,
