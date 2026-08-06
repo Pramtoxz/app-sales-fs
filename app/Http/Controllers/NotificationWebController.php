@@ -136,9 +136,9 @@ class NotificationWebController extends Controller
                 $tokens = $devices->pluck('fcm_token')->toArray();
                 $result = $firebase->sendToMultipleDevices($tokens, $title, $message, ['type' => 'broadcast']);
 
-                if ($result['success']) {
-                    $successCount += $result['successful'];
-                    $failCount += $result['failed'];
+                if ($result && isset($result['success']) && $result['success']) {
+                    $successCount += $result['successful'] ?? 0;
+                    $failCount += $result['failed'] ?? 0;
                 } else {
                     $failCount += count($tokens);
                 }
