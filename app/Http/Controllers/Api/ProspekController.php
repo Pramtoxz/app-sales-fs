@@ -220,7 +220,7 @@ class ProspekController extends Controller
             ->where('guestbook.fk_dealer', $flp->kode_dealer)
             ->whereNull('spk.IDGuestBook')
             ->where('master_kons_ve.no_hp', $noHp)
-            ->whereIn('master_kons_ve.stage_id', ['5', '6', '7', '8'])
+            ->whereIn('master_kons_ve.stage_id', ['3', '5', '6', '7', '8'])
             ->orderBy('master_kons_ve.created_at', 'DESC')
             ->select(
                 'master_kons_ve.nama',
