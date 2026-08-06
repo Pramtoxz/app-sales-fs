@@ -100,6 +100,26 @@ class ProspekController extends Controller
                 DB::raw('"FUProspek".hasil_fu_ve as status_id'),
                 'guestbook.created_at'
             )
+            ->groupBy(
+                'guestbook.IDGuestBook',
+                'guestbook.Tanggal',
+                'guestbook.NamaCustomer',
+                'guestbook.NoHp',
+                'guestbook.KodeType',
+                'guestbook.KodeWarna',
+                'mgm.DeskripsiType',
+                'guestbook.DeskripsiWarnaMotor',
+                'setupjenispembayaran.JenisPembayaran',
+                'SetupTipeCustomer.tipe_customer',
+                'guestbook.AlamatProspect',
+                'guestbook.AlamatKantorProspect',
+                'master_source_leads.deskripsi',
+                'guestbook.Keterangan',
+                'spk.IDGuestBook',
+                'tbl_hasil_status_fu.nm_hasil_fu',
+                'FUProspek.hasil_fu_ve',
+                'guestbook.created_at'
+            )
             ->orderBy('guestbook.IDGuestBook', 'desc')
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
@@ -205,33 +225,24 @@ class ProspekController extends Controller
             return response()->json(['success' => false, 'message' => 'Format nomor HP tidak valid (min 8 digit, awali 07/08)'], 422);
         }
 
-        \Log::info('CekLeads Debug', [
-            'no_hp' => $noHp,
-            'dealer' => $flp->kode_dealer,
-            'id_flp' => $flp->id_flp
-        ]);
-
-        // Test query - HANYA filter no_hp untuk verifikasi data ada
         $lead = DB::connection('pgsql_sales')
             ->table('HC3.master_kons_ve')
             ->leftJoin('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
             ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
+            ->where('guestbook.fk_dealer', $flp->kode_dealer)
             ->where('master_kons_ve.no_hp', $noHp)
+            ->whereNull('spk.IDGuestBook')
             ->orderBy('master_kons_ve.created_at', 'DESC')
             ->select(
                 'master_kons_ve.nama',
                 'master_kons_ve.no_hp',
                 'master_kons_ve.id_guestbook',
-                'master_kons_ve.id_leads',
-                'master_kons_ve.stage_id',
-                DB::raw('guestbook."fk_dealer" as dealer_code'),
-                DB::raw('spk."IDSpk" as spk_id'),
-                'master_source_leads.deskripsi as deskripsi_source'
+                'master_source_leads.deskripsi as deskripsi_source',
+                'master_kons_ve.id_leads'
             )
             ->first();
-        
-        \Log::info('CekLeads Result', ['found' => !empty($lead), 'data' => $lead]);
 
         DB::connection('pgsql_sales')->table('HC3.log_search_guestbook')->insert([
             'id_flp' => $flp->id_flp,
