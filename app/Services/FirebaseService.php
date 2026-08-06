@@ -24,10 +24,31 @@ class FirebaseService
         $credentialsPath = base_path(env('FCM_CREDENTIALS_PATH', 'firebase/salesfirebase.json'));
 
         if (!file_exists($credentialsPath)) {
+            Log::error('Firebase credentials file not found', ['path' => $credentialsPath]);
             throw new \Exception("Firebase credentials file not found: {$credentialsPath}");
         }
 
-        $credentials = json_decode(file_get_contents($credentialsPath), true);
+        $credentialsContent = file_get_contents($credentialsPath);
+        $credentials = json_decode($credentialsContent, true);
+
+        if ($credentials === null) {
+            Log::error('Failed to parse Firebase credentials JSON', [
+                'path' => $credentialsPath,
+                'json_error' => json_last_error_msg(),
+                'content_length' => strlen($credentialsContent)
+            ]);
+            throw new \Exception("Failed to parse Firebase credentials JSON: " . json_last_error_msg());
+        }
+
+        if (!isset($credentials['project_id']) || !isset($credentials['client_email']) || !isset($credentials['private_key'])) {
+            Log::error('Firebase credentials missing required fields', [
+                'path' => $credentialsPath,
+                'has_project_id' => isset($credentials['project_id']),
+                'has_client_email' => isset($credentials['client_email']),
+                'has_private_key' => isset($credentials['private_key'])
+            ]);
+            throw new \Exception("Firebase credentials file is missing required fields");
+        }
 
         $this->projectId   = $credentials['project_id'];
         $this->clientEmail = $credentials['client_email'];
