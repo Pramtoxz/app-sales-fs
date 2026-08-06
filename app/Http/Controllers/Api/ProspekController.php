@@ -30,18 +30,16 @@ class ProspekController extends Controller
         $status = $request->query('status');
         $page = $request->query('page', 1);
 
-        // Base query for filtering
+        // Base query for filtering - start from guestbook untuk konsistensi dengan web
         $baseQuery = DB::connection('pgsql_sales')
-            ->table('HC3.master_kons_ve')
-            ->join('HC3.crm_ve', 'crm_ve.id_kons', '=', 'master_kons_ve.id_kons_ve')
-            ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->table('H1_DOS.guestbook')
             ->leftJoin('H1_HC3.FUProspek', 'FUProspek.fk_prospek', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.tbl_hasil_status_fu', 'tbl_hasil_status_fu.id_hasil_fu', '=', 'FUProspek.hasil_fu_ve')
             ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
-            ->where('crm_ve.assign_dealer_status', 't')
             ->where('guestbook.id_flp', $flp->id_flp)
             ->whereRaw('EXTRACT(MONTH FROM "guestbook"."Tanggal") = ?', [$bulan])
-            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun]);
+            ->whereRaw('EXTRACT(YEAR FROM "guestbook"."Tanggal") = ?', [$tahun])
+            ->where('guestbook.IDGuestBook', 'like', 'C10/%');
 
         if ($status) {
             if ($status === 'DEAL') {
@@ -68,41 +66,41 @@ class ProspekController extends Controller
             }
         }
 
-        // Count distinct leads
-        $total = (clone $baseQuery)
-            ->distinct()
-            ->count('master_kons_ve.id_leads');
+        // Count total guestbook
+        $total = (clone $baseQuery)->count('guestbook.IDGuestBook');
 
-        // Get data with DISTINCT ON
+        // Get data
         $data = (clone $baseQuery)
             ->leftJoin('H1_DOS.setupjenispembayaran', 'setupjenispembayaran.IDJenisPembayaran', '=', 'guestbook.RencanaPembayaran')
             ->leftJoin('Master_Schema.SetupTipeCustomer', 'SetupTipeCustomer.id_tipe', '=', 'guestbook.TipeCustomer')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
-            ->selectRaw('DISTINCT ON (master_kons_ve.id_leads) master_kons_ve.id_leads, 
-                guestbook."IDGuestBook",
-                guestbook."Tanggal",
-                guestbook."NamaCustomer",
-                guestbook."NoHp",
-                guestbook."KodeType",
-                guestbook."KodeWarna",
-                setupjenispembayaran."JenisPembayaran" as rencana_pembayaran,
-                "SetupTipeCustomer".tipe_customer,
-                guestbook."AlamatProspect",
-                guestbook."AlamatKantorProspect",
-                master_source_leads.deskripsi as source,
-                guestbook."Keterangan",
-                CASE 
-                    WHEN spk."IDGuestBook" IS NOT NULL THEN \'DEAL\'
-                    WHEN LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%not deal%\' 
-                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%reject%\' 
-                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%cancel%\' 
-                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE \'%gagal%\' THEN \'NOT DEAL\'
-                    ELSE \'PENDING\'
-                END as "Status_guestbook",
-                "FUProspek".hasil_fu_ve as status_id,
-                guestbook.created_at')
-            ->orderBy('master_kons_ve.id_leads')
-            ->orderBy('guestbook.Tanggal', 'desc')
+            ->leftJoin('H1_DOS.mastergroupsegmenmotor as mgm', 'mgm.KodeType', '=', 'guestbook.KodeType')
+            ->select(
+                'guestbook.IDGuestBook',
+                'guestbook.Tanggal',
+                'guestbook.NamaCustomer',
+                'guestbook.NoHp',
+                'guestbook.KodeType',
+                'guestbook.KodeWarna',
+                DB::raw("TRIM(COALESCE(mgm.\"DeskripsiType\", '') || ' ' || COALESCE(guestbook.\"DeskripsiWarnaMotor\", '')) as \"DeskripsiWarnaMotor\""),
+                DB::raw('setupjenispembayaran."JenisPembayaran" as rencana_pembayaran'),
+                DB::raw('"SetupTipeCustomer".tipe_customer'),
+                'guestbook.AlamatProspect',
+                'guestbook.AlamatKantorProspect',
+                DB::raw('master_source_leads.deskripsi as source'),
+                'guestbook.Keterangan',
+                DB::raw("CASE 
+                    WHEN spk.\"IDGuestBook\" IS NOT NULL THEN 'DEAL'
+                    WHEN LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%not deal%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%reject%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%cancel%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%gagal%' THEN 'NOT DEAL'
+                    ELSE 'PENDING'
+                END as \"Status_guestbook\""),
+                DB::raw('"FUProspek".hasil_fu_ve as status_id'),
+                'guestbook.created_at'
+            )
+            ->orderBy('guestbook.IDGuestBook', 'desc')
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
             ->get();
@@ -156,7 +154,14 @@ class ProspekController extends Controller
                 'guestbook.AlamatKantorProspect',
                 'master_source_leads.deskripsi as source',
                 'guestbook.Keterangan',
-                DB::raw("UPPER(COALESCE(tbl_hasil_status_fu.nm_hasil_fu, 'Belum Follow Up')) as \"Status_guestbook\""),
+                DB::raw("CASE 
+                    WHEN spk.\"IDGuestBook\" IS NOT NULL THEN 'DEAL'
+                    WHEN LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%not deal%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%reject%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%cancel%' 
+                         OR LOWER(tbl_hasil_status_fu.nm_hasil_fu) LIKE '%gagal%' THEN 'NOT DEAL'
+                    ELSE 'PENDING'
+                END as \"Status_guestbook\""),
                 'FUProspek.hasil_fu_ve as status_id',
                 'guestbook.created_at',
                 'guestbook.updated_at'
