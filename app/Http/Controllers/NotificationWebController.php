@@ -10,6 +10,7 @@ use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -114,6 +115,10 @@ class NotificationWebController extends Controller
                     ->get();
 
                 if ($devices->isEmpty()) {
+                    Log::warning('No devices found for FLP', [
+                        'id_flp' => $flp->id_flp,
+                        'nama' => $flp->nama
+                    ]);
                     $noDeviceCount++;
                     continue;
                 }
@@ -122,6 +127,10 @@ class NotificationWebController extends Controller
                 $userId = $firstDevice?->user_id;
                 
                 if (!$userId) {
+                    Log::error('User ID is null for device', [
+                        'id_flp' => $flp->id_flp,
+                        'device_id' => $firstDevice?->device_id
+                    ]);
                     $noDeviceCount++;
                     continue;
                 }
@@ -141,6 +150,11 @@ class NotificationWebController extends Controller
                     $successCount += $result['successful'] ?? 0;
                     $failCount += $result['failed'] ?? 0;
                 } else {
+                    Log::error('Firebase send failed', [
+                        'id_flp' => $flp->id_flp,
+                        'tokens_count' => count($tokens),
+                        'result' => $result
+                    ]);
                     $failCount += count($tokens);
                 }
             }
@@ -152,6 +166,14 @@ class NotificationWebController extends Controller
                     ($noDeviceCount > 0 ? ", {$noDeviceCount} sales tanpa device" : ''),
             ]);
         } catch (\Exception $e) {
+            Log::error('Error sending notification', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'target' => $target,
+                'id_flp' => $request->id_flp,
+                'user_id' => $user->id
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengirim notifikasi: ' . $e->getMessage(),
