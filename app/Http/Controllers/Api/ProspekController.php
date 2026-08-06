@@ -205,29 +205,28 @@ class ProspekController extends Controller
             return response()->json(['success' => false, 'message' => 'Format nomor HP tidak valid (min 8 digit, awali 07/08)'], 422);
         }
 
-        // Query diperbaiki untuk konsistensi dengan web - start dari FUProspek
+        \Log::info('CekLeads Debug', [
+            'no_hp' => $noHp,
+            'dealer' => $flp->kode_dealer,
+            'id_flp' => $flp->id_flp
+        ]);
+
         $lead = DB::connection('pgsql_sales')
             ->table('H1_HC3.FUProspek')
             ->join('H1_DOS.guestbook', 'guestbook.IDGuestBook', '=', 'FUProspek.fk_prospek')
-            ->leftJoin('HC3.master_kons_ve', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
+            ->join('HC3.master_kons_ve', 'guestbook.IDGuestBook', '=', 'master_kons_ve.id_guestbook')
             ->leftJoin('H1_DOS.spk', 'spk.IDGuestBook', '=', 'guestbook.IDGuestBook')
             ->leftJoin('Master_Schema.master_source_leads', 'master_source_leads.id', '=', 'guestbook.Source')
             ->where('guestbook.fk_dealer', $flp->kode_dealer)
             ->whereNull('spk.IDGuestBook')
-            ->where(function($q) use ($noHp) {
-                $q->where('master_kons_ve.no_hp', $noHp)
-                  ->orWhere('guestbook.NoHp', $noHp);
-            })
-            ->where(function($q) {
-                $q->whereIn('master_kons_ve.stage_id', ['5', '6', '7', '8'])
-                  ->orWhereNull('master_kons_ve.stage_id');
-            })
-            ->orderBy('FUProspek.updated_at', 'DESC')
+            ->where('master_kons_ve.no_hp', $noHp)
+            ->whereIn('master_kons_ve.stage_id', ['5', '6', '7', '8'])
+            ->orderBy('master_kons_ve.created_at', 'DESC')
             ->select(
-                DB::raw('COALESCE(master_kons_ve.nama, guestbook."NamaCustomer") as nama'),
-                DB::raw('COALESCE(master_kons_ve.no_hp, guestbook."NoHp") as no_hp'),
-                DB::raw('COALESCE(master_kons_ve.id_guestbook, guestbook."IDGuestBook") as id_guestbook'),
-                DB::raw('master_source_leads.deskripsi as deskripsi_source'),
+                'master_kons_ve.nama',
+                DB::raw('guestbook."NoHp" as no_hp'),
+                'master_kons_ve.id_guestbook',
+                'master_source_leads.deskripsi as deskripsi_source',
                 'master_kons_ve.id_leads'
             )
             ->first();
